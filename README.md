@@ -1,6 +1,4 @@
-To start
-
-### Install and Activate Venv
+### To start up
 
 #### Windows
 ```bash
