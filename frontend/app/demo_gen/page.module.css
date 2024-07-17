@@ -1,0 +1,14 @@
+/* Home.module.css */
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* Full viewport height */
+    background-color: white; /* Ensure container background is white */
+  }
+  
+  .text {
+    font-size: 1.5rem;
+    color: black; /* Ensure text color is black or your preferred color */
+  }
+  
