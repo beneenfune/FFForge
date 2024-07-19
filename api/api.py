@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, jsonify, request
 from flask_restful import Resource, Api, reqparse
 
 import os
@@ -28,11 +28,50 @@ class DemoGenerator(Resource):
     def get(self):
         return {'demo_gen': 'demo generator yokoso'}
     
-    """
+    
     def post(self):
+
         # Parse input data
         parser = reqparse.RequestParser()
-    """
+        parser.add_argument('structname', type=str, required=True, help='Name of Structure is required')
+        parser.add_argument('starttemp', type=float, required=True, help='Starting Temperature is required')
+        parser.add_argument('steptemp', type=float, required=True, help='Temperature Step is required')
+        parser.add_argument('endtemp', type=float, required=True, help='Ending Temperature is required')
+        args = parser.parse_args()
+
+        # Get files from request
+        infile = request.files['infile']
+        datafile = request.files['datafile']
+        slurmfile = request.files['slurmfile']
+
+
+        # Save files to temp folder
+        if not os.path.exists('temp'):
+            os.makedirs('temp')
+        
+        infile_path = os.path.join('temp/', 'infile.txt')
+        datafile_path = os.path.join('temp/', 'datafile.txt')
+        slurmfile_path = os.path.join('temp/', 'slurmfile.slurm')
+
+        infile.save(infile_path)
+        datafile.save(datafile_path)
+        slurmfile.save(slurmfile_path)
+
+        # Process files using mlff_trj_gen
+        structname = args['structname']
+        starttemp = args['starttemp']
+        steptemp = args['steptemp']
+        endtemp = args['endtemp']
+
+        # Example processing (replace with actual logic)
+        response = {
+            'structname': structname,
+            'starttemp': starttemp,
+            'steptemp': steptemp,
+            'endtemp': endtemp,
+            'message': f'Structure {structname} with temperature range {starttemp} to {endtemp} and step {steptemp} processed successfully.'
+        }
+        return jsonify(response), 200
 
 """
 # Route for Demo
@@ -138,7 +177,8 @@ def mlff_trj_gen(structure_name, calc_dir, start_temp, end_temp, step_temp, in_f
 """
 
 api.add_resource(Home, '/api/')
-api.add_resource(DemoGenerator, '/api/demo_gen')
+api.add_resource(DemoGenerator, '/api/demo_gen/')
+
 
 
 # To start API
