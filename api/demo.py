@@ -19,14 +19,17 @@ def mlff_trj_gen(structure_name, calc_dir, temperature_range, master_input, mast
         Path to the master data file
     master_slurm : str
         Path to the master slurm file
+    
+    Changes:
+    "../../" + 
     """
     os.chdir(calc_dir)
     for temp in temperature_range:
         os.mkdir(str(temp))
         os.chdir(str(temp))
-        subprocess.call('cp {} in.{}'.format(master_input, structure_name), shell=True)
-        subprocess.call('cp {} data.{}'.format(master_data, structure_name), shell=True)
-        subprocess.call('cp {} {}.slurm'.format(master_slurm, structure_name), shell=True)
+        subprocess.call('cp {} in.{}'.format( "../../" + master_input, structure_name), shell=True)
+        subprocess.call('cp {} data.{}'.format("../../" + master_data, structure_name), shell=True)
+        subprocess.call('cp {} {}.slurm'.format("../../" + master_slurm, structure_name), shell=True)
         subprocess.call("sed -i 's/master/{}/g' in.*".format(structure_name), shell=True)
         sed_string = "sed -i -e 's/master_jobname/{}/g ; s/master_prefix/{}/g ; s/master_temperature/{}/g' *.slurm".format(structure_name, structure_name, temp)
         subprocess.call(sed_string, shell=True)

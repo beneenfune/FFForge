@@ -44,9 +44,9 @@ class DemoGenerator(Resource):
 
         # Access form data
         structname = request.form.get('structname')
-        starttemp = request.form.get('starttemp')
-        steptemp = request.form.get('steptemp')
-        endtemp = request.form.get('endtemp')
+        starttemp = float(request.form.get('starttemp'))
+        steptemp = float(request.form.get('steptemp'))
+        endtemp = float(request.form.get('endtemp'))
         
         # Create new files in temp directory
         if not os.path.exists('temp'):
@@ -67,19 +67,27 @@ class DemoGenerator(Resource):
         if slurmfile:
             slurmfile_path = os.path.join('temp', 'slurmfile.slurm')
             slurmfile.save(slurmfile_path)
+        
+        # Ensure the calculations directory exists
+        if not os.path.exists('calculations'):
+            os.makedirs('calculations')
+        
+        calc_dir = os.path.join('calculations')
+
+        # Create temperature range
+        temp_range = np.arange(starttemp, endtemp, steptemp)
 
         # Process files using mlff_trj_gen to generate output files
+        mlff_trj_gen(structname, calc_dir, temp_range, infile_path, datafile_path,slurmfile_path)
 
-        # Make return zip-> os.path(temp/demo.zip)
-        # Zip recursively using linux in a new function
-
-        # Read output files and return the data
-
+        # Zip recursively using Linux in a new function
+        zip_path = zip_dir(calc_dir)
 
         return {
             'iPath': infile_path if infile else None,
             'dPath': datafile_path if datafile else None,
-            'sPath': slurmfile_path if slurmfile else None
+            'sPath': slurmfile_path if slurmfile else None,
+            'zPath': zip_path 
         }
 
 """
