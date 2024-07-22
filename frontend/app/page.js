@@ -7,7 +7,7 @@ export default function Home() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
 
-  fetch('http://127.0.0.1:8000/api/')
+  fetch(process.env.NEXT_PUBLIC_BASE_URL + '/api/')
       .then(res => res.json())
       .then(data => {
           setMessage(data.homepage);

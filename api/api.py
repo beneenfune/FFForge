@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request
 from flask_restful import Resource, Api, reqparse
+from demo import mlff_trj_gen, zip_dir
 
 import os
 import subprocess
@@ -30,48 +31,56 @@ class DemoGenerator(Resource):
     
     
     def post(self):
-
         # Parse input data
-        parser = reqparse.RequestParser()
-        parser.add_argument('structname', type=str, required=True, help='Name of Structure is required')
-        parser.add_argument('starttemp', type=float, required=True, help='Starting Temperature is required')
-        parser.add_argument('steptemp', type=float, required=True, help='Temperature Step is required')
-        parser.add_argument('endtemp', type=float, required=True, help='Ending Temperature is required')
-        args = parser.parse_args()
+        # parser = reqparse.RequestParser()
+        # parser.add_argument('structname', type=str, required=True, help='Name of Structure is required')
+        # parser.add_argument('starttemp', type=float, required=True, help='Starting Temperature is required')
+        # parser.add_argument('steptemp', type=float, required=True, help='Temperature Step is required')
+        # parser.add_argument('endtemp', type=float, required=True, help='Ending Temperature is required')
+        # parser.add_argument('infile', type=str, help="The *.in file input")
+        # parser.add_argument('datafile', type=str, help='The *.data file input')
+        # parser.add_argument('slurmfile', type=str, help='The slurm.* file input')
+        # args = parser.parse_args()
 
-        # Get files from request
-        infile = request.files['infile']
-        datafile = request.files['datafile']
-        slurmfile = request.files['slurmfile']
-
-
-        # Save files to temp folder
+        # Access form data
+        structname = request.form.get('structname')
+        starttemp = request.form.get('starttemp')
+        steptemp = request.form.get('steptemp')
+        endtemp = request.form.get('endtemp')
+        
+        # Create new files in temp directory
         if not os.path.exists('temp'):
             os.makedirs('temp')
-        
-        infile_path = os.path.join('temp/', 'infile.txt')
-        datafile_path = os.path.join('temp/', 'datafile.txt')
-        slurmfile_path = os.path.join('temp/', 'slurmfile.slurm')
 
-        infile.save(infile_path)
-        datafile.save(datafile_path)
-        slurmfile.save(slurmfile_path)
+        # Process and save the uploaded files
+        infile = request.files.get('infile')
+        datafile = request.files.get('datafile')
+        slurmfile = request.files.get('slurmfile')
 
-        # Process files using mlff_trj_gen
-        structname = args['structname']
-        starttemp = args['starttemp']
-        steptemp = args['steptemp']
-        endtemp = args['endtemp']
+        # Save file args to the new files in the temp directory
+        if infile:
+            infile_path = os.path.join('temp', 'infile.txt')
+            infile.save(infile_path)
+        if datafile:
+            datafile_path = os.path.join('temp', 'datafile.txt')
+            datafile.save(datafile_path)
+        if slurmfile:
+            slurmfile_path = os.path.join('temp', 'slurmfile.slurm')
+            slurmfile.save(slurmfile_path)
 
-        # Example processing (replace with actual logic)
-        response = {
-            'structname': structname,
-            'starttemp': starttemp,
-            'steptemp': steptemp,
-            'endtemp': endtemp,
-            'message': f'Structure {structname} with temperature range {starttemp} to {endtemp} and step {steptemp} processed successfully.'
+        # Process files using mlff_trj_gen to generate output files
+
+        # Make return zip-> os.path(temp/demo.zip)
+        # Zip recursively using linux in a new function
+
+        # Read output files and return the data
+
+
+        return {
+            'iPath': infile_path if infile else None,
+            'dPath': datafile_path if datafile else None,
+            'sPath': slurmfile_path if slurmfile else None
         }
-        return jsonify(response), 200
 
 """
 # Route for Demo

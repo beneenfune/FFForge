@@ -2,14 +2,6 @@ To start
 
 ### Install and Activate Venv
 
-#### Windows
-```bash
-cd api
-py -3 -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-```
-
 #### MacOS/Linux
 ```bash
 cd api
