@@ -1,9 +1,10 @@
 import os
 import subprocess
+import shutil
 
 def mlff_trj_gen(structure_name, calc_dir, temperature_range, master_input, master_data, master_slurm):
     """
-    To demonstrate input generator
+    Demonstrate input generator
 
     Parameters
     ----------
@@ -34,29 +35,38 @@ def mlff_trj_gen(structure_name, calc_dir, temperature_range, master_input, mast
         sed_string = "sed -i -e 's/master_jobname/{}/g ; s/master_prefix/{}/g ; s/master_temperature/{}/g' *.slurm".format(structure_name, structure_name, temp)
         subprocess.call(sed_string, shell=True)
         os.chdir("../")
+    os.chdir("../")
 
-def zip_dir(dir_to_zip):
+def zip_dir(source_folder, output_path):
     """
-    To zip a directory with subdirectories
+    Zip a directory with subdirectories
     
     Parameters
     ----------
-    dir_to_zip : str
+    source_folder : str
         Path to directory to zip recursively
+    output_path : str
+        Path to the output zip file (without the .zip extension)
     
     Returns
     -------
     zip_path : str
-        Path to the zip file
+        Path to the created zip file
     """
-    zip_name = 'demo.zip'
-    zip_path = os.path.join(dir_to_zip, zip_name)
-    
-    # Execute the zip command
-    result = subprocess.call(f'zip -r {zip_path} {dir_to_zip}', shell=True)
-    
-    # Handle potential errors
-    if result != 0 or not os.path.exists(zip_path):
-        raise RuntimeError(f"Failed to create zip file at {zip_path}")
-    
-    return zip_path
+    shutil.make_archive(output_path, 'zip', source_folder)
+    return output_path + '.zip'
+
+def remove_dir(directory_path):
+    """
+    Remove the specified directory and all its contents.
+
+    Parameters
+    ----------
+    directory_path : str
+        Path to the directory to remove.
+    """
+    if os.path.exists(directory_path) and os.path.isdir(directory_path):
+        shutil.rmtree(directory_path)
+        print(f"Directory {directory_path} has been removed.")
+    else:
+        print(f"Directory {directory_path} does not exist.")
