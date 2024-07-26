@@ -1,9 +1,5 @@
 /*
 Form for Demo Generator
-
-INPUTS:
-
-
 */ 
 
 import { useState } from "react";
@@ -19,6 +15,7 @@ const DemoForm = () => {
     const [inFile, setInFile] = useState(null)
     const [dataFile, setDataFile] = useState(null)
     const [slurmFile, setSlurmFile] = useState(null)
+    const [zipPath, setZipPath] = useState('')
 
     // Use axios to handlie multiple objects including files
     function handleSubmit(event) {
@@ -45,34 +42,49 @@ const DemoForm = () => {
           },
         };
         
-        // Send request to api and handle retrieved response
-        // https://www.youtube.com/watch?v=r7r45An_Lkc
+        // Send request to API and handle response
         axios.post(url, formData, config)
-            // If request was successful
+            // Successful request
             .then((response) => {
             
                 // Handle success
                 if (response.status >= 200 && response.status < 300) {
-                    console.log(response.data);
+                    const zip_path = response.data.zPath;
+                    setZipPath(zip_path);  // Set the zip path in the state
+                    console.log(response.data.zPath)
                 } else {
                     // Handle error if status code is not in the range of 2xx
                     throw new Error(`HTTP error: ${response.status}`);
                 }
-
-                // https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Client-side_web_APIs/Fetching_data
-                // Otherwise (if the response succeeded), our handler fetches the response
-                // as text by calling response.text(), and immediately returns the promise
-                // returned by `response.text()`.
-            
-                // TODO (implement): After processing on serverside, response.data should be  
-                // looked up: how to output a file from axios to client side
-                // try: https://stackoverflow.com/questions/41938718/how-to-download-files-using-axios
             })
-            // Else, it will print error
+            // Fail to make request
             .catch((error) => {
                 console.error("Error uploading files: ", error);
             });
-      }
+    }
+    
+    // Function to handle file download
+    const handleDownload = () => {
+        axios({
+            url: zipPath, // Use the zipPath from the state
+            method: 'GET',
+            responseType: 'blob', // important
+        }).then((response) => {
+            // create file link in browser's memory
+            const href = URL.createObjectURL(response.data);
+        
+            // create "a" HTML element with href to file & click
+            const link = document.createElement('a');
+            link.href = href;
+            link.setAttribute('download', 'demo.zip'); // or any other extension
+            document.body.appendChild(link);
+            link.click();
+        
+            // clean up "a" element & remove ObjectURL
+            document.body.removeChild(link);
+            URL.revokeObjectURL(href);
+        });
+    };  
 
     return (
         <form className="create" onSubmit={handleSubmit}>
@@ -149,6 +161,15 @@ const DemoForm = () => {
                 <input type="submit"
                 value="Submit"></input>
             </div>
+
+            {/* Download button, shown only when zipPath is available */}
+            {zipPath && (
+                <div>
+                    <button type="button" onClick={handleDownload}>
+                        Download File
+                    </button>
+                </div>
+            )}
         </form>
 
     )

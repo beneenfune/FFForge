@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory, send_file, url_for
 from flask_restful import Resource, Api, reqparse
 from demo import mlff_trj_gen, zip_dir, remove_dir
 
@@ -84,18 +84,25 @@ class DemoGenerator(Resource):
         except Exception as e:
             return {'error': f"Failed to remove directories: {str(e)}"}, 500
 
+        # Ensure the calculations directory exists
+        if not os.path.exists('calculations'):
+            os.makedirs('calculations')
+        
+        subprocess.call('mv {} static/'.format(zip_path), shell=True)
+        full_zip_path = url_for('static', filename='demo.zip', _external=True)
+
         return {
-            'zPath': zip_path 
+            'zPath': full_zip_path 
         }
 
 # Route for Demo Generator
 class DemoDownload(Resource):
-    def get(self, filename):
-        return send_from_directory(directory='./', filename=filename)
+    def get(self, path):
+        return send_from_directory('static', path)
 
 api.add_resource(Home, '/api/')
 api.add_resource(DemoGenerator, '/api/demo_gen/')
-api.add_resource(DemoDownload, '/api/download/<path:filename>')
+api.add_resource(DemoDownload, '/static/<path:path>')
 
 
 
