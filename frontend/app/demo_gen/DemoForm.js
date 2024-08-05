@@ -88,7 +88,7 @@ const DemoForm = () => {
 
     return (
         <form className="create" onSubmit={handleSubmit}>
-            <h3>Demo Generator</h3>
+            <h3>Demo Generator</h3> 
 
             {/*Input field for structure_name */}
             <label>Name of Structure</label>

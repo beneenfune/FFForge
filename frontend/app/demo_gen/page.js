@@ -19,7 +19,7 @@ const Home = () => {
     });
     const [response, setResponse] = useState(null);
 
-    // Fetch data from the API GOOD
+    // Fetch data from the API
     useEffect(() => {
         const fetchDemo = async () => {
             const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL + '/api/demo_gen')
