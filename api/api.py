@@ -1,5 +1,6 @@
-from flask import Flask, render_template, request
+from flask import Flask, jsonify, request, send_from_directory, send_file, url_for
 from flask_restful import Resource, Api, reqparse
+from demo import mlff_trj_gen, zip_dir, remove_dir
 
 import os
 import subprocess
@@ -21,124 +22,107 @@ def after_request(response):
 # Route for Home page
 class Home(Resource):
     def get(self):
-        return {'homepage': 'homepage yokoso'}
+        return {'homepage': 'welcome to homepage'}
 
 # Route for Demo Generator
 class DemoGenerator(Resource):
     def get(self):
-        return {'demo_gen': 'demo generator yokoso'}
+        return {'demo_gen': 'welcome to demo generator'}
     
-    """
     def post(self):
-        # Parse input data
-        parser = reqparse.RequestParser()
-    """
 
-"""
-# Route for Demo
-@app.route('/demo_generator')
-def demo_gen():
-    if request.method == 'POST':
-        # First get data from user returns
-        data_file = request.files['data_file']
-        in_file = request.files['in_file']
-        slurm_file = request.files['slurm_file']
-        structure_name = request.args.get('structure_name', 'sample').replace(' ', '_')
-        start_temp = float(request.args.get('start_temp', 0))
-        end_temp = float(request.args.get('end_temp', 0))
-        step_temp = float(request.args.get('step_temp', 0))
-
-        # TODO: Check for edge cases before call function
-
-        # Then call the function from demo_gen.py to get 
-        # value of variables to send to HTML
-        # path_to_zip = mlff_trj_gen()
+        # Access form data
+        structname = request.form.get('structname')
+        starttemp = float(request.form.get('starttemp'))
+        steptemp = float(request.form.get('steptemp'))
+        endtemp = float(request.form.get('endtemp'))
         
+        # Create new files in temp directory
+        if not os.path.exists('temp'):
+            os.makedirs('temp')
+        
+        temp_dir = os.path.join('temp')
 
+        # Process and save the uploaded files
+        infile = request.files.get('infile')
+        datafile = request.files.get('datafile')
+        slurmfile = request.files.get('slurmfile')
 
-        # Lastly, end the template by rendering the html 
-        # and sending the variables over
-        return render_template("demo_gen.html")
-    return render_template("demo_gen.html")
+        # Save file args to the new files in the temp directory
+        if infile:
+            infile_path = os.path.join('temp', 'infile.txt')
+            infile.save(infile_path)
+        if datafile:
+            datafile_path = os.path.join('temp', 'datafile.txt')
+            datafile.save(datafile_path)
+        if slurmfile:
+            slurmfile_path = os.path.join('temp', 'slurmfile.slurm')
+            slurmfile.save(slurmfile_path)
+        
+        # Ensure the calculations directory exists
+        if not os.path.exists('calculations'):
+            os.makedirs('calculations')
+        
+        calc_dir = os.path.join('calculations')
 
-"""
+        # Create temperature range
+        temp_range = np.arange(starttemp, endtemp, steptemp)
 
-"""
-Demo Input Generator Function
+        # Process files using mlff_trj_gen to generate output files
+        mlff_trj_gen(structname, calc_dir, temp_range, infile_path, datafile_path,slurmfile_path)
 
-Parameters:
-TODO descriptors of parameters
-str structure_name :
-str calc_dir :
-list[float] temperature_range :
-file in_file : 
-file data_file :
-file slurm_file :
+        # Zip recursively
+        try:
+            zip_path = zip_dir(calc_dir, './demo')
+        except Exception as e:
+            return {'error': f"Failed to create zip file: {str(e)}"}, 500
 
-Returns: 
-str zip_path : path to zip file with input files inside 
+        # Remove temp and calculations if zip was successful, otherwise error
+        try:
+            remove_dir(calc_dir)
+            remove_dir(temp_dir)
+        except Exception as e:
+            return {'error': f"Failed to remove directories: {str(e)}"}, 500
 
-def mlff_trj_gen(structure_name, calc_dir, start_temp, end_temp, step_temp, in_file, data_file, slurm_file):
+        # Ensure the calculations directory exists
+        if not os.path.exists('calculations'):
+            os.makedirs('calculations')
+        
+        subprocess.call('mv {} static/'.format(zip_path), shell=True)
+        full_zip_path = url_for('static', filename='demo.zip', _external=True)
 
-    # Ensure the calc_dir exists (create if it does not exist)
-    if not os.path.isdir(calc_dir):
-        os.mkdir(calc_dir)
+        return {
+            'zPath': full_zip_path 
+        }
+
+# Route for Demo Generator
+class DemoDownload(Resource):
+    def get(self, path):
+        return send_from_directory('static', path)
     
-    # Change to the calculation directory
-    os.chdir(calc_dir)
+# Route for Landing Page
+class Landing(Resource):
+    def get(self):
+        return {'land': 'welcome to landing page'}
     
-    # Create the structure directory
-    os.mkdir(structure_name)
-    os.chdir(structure_name)
-
-    # Iterate in structure_name directory
-    temperture_range = np.arange(start_temp, end_temp, step_temp)
-    for temp in temperture_range:
-        temp_dir = str(temp)
-
-        os.mkdir(temp_dir)
-        os.chdir(temp_dir)
-
-        # TODO: what's passed in the file response, but subprocess uses the path
-        # Copy files using subprocesses
-        subprocess.call('cp {} in.{}'.format(in_file, structure_name), shell=True)
-        subprocess.call('cp {} data.{}'.format(data_file, structure_name), shell=True)
-        subprocess.call('cp {} {}.slurm'.format(slurm_file, structure_name), shell=True)
-
-        # Replace placeholders in files
-        subprocess.call("sed -i 's/master/{}/g' in.*".format(structure_name), shell=True)
-        sed_string = "sed -i -e 's/master_jobname/{}/g ; s/master_prefix/{}/g ; s/master_temperature/{}/g' *.slurm".format(structure_name, structure_name, temp_dir)
-        subprocess.call(sed_string, shell=True)
-        os.chdir("../")
-    ## ----------
-        os.chdir("../")
-
-    # After individual files are made, store in zip function to return 
-
-    # subprocess.call('zip -r {}_files .'.format(structure_name), shell=True)
-    try:
-        # Using subprocess.run for better error handling and capturing output
-        result = subprocess.run(
-            ['zip', '-r', '{}_files.zip'.format(structure_name), '{}'.format(structure_name)],
-            check=True,  # Raises CalledProcessError if the command exits with a non-zero status
-            stdout=subprocess.PIPE,  # Capture standard output
-            stderr=subprocess.PIPE,  # Capture standard error
-            text=True  # Decode the output as text (Python 3.7+)
-        )
-        print("Standard Output:", result.stdout)
-        print("Standard Error:", result.stderr)
-    except subprocess.CalledProcessError as e:
-        print(f"Error occurred: {e.stderr}")
-        return None
-
-    # Then, destroy all files in calculation directory for storage
-    subprocess.call('rm -r {}'.format(structure_name))
-    zip_path = '{}.{}'.format(CALC_ROOT, structure_name)
-    return zip_path
-"""
+# Route for SMILES Text input Page
+class TextInput(Resource):
+    def get(self):
+        return {'text': 'welcome to text input page'}
+    
+# Route for File Input Page
+class FileInput(Resource):
+    def get(self):
+        return {'land': 'welcome to file input page'}
 
 api.add_resource(Home, '/api/')
-api.add_resource(DemoGenerator, '/api/demo_gen')
+api.add_resource(DemoGenerator, '/api/demo_gen/')
+api.add_resource(DemoDownload, '/static/<path:path>')
+api.add_resource(Landing, '/api/landing/')
+api.add_resource(TextInput, '/api/text-input/')
+api.add_resource(FileInput, '/api/file-input/')
+
+
 
 
 # To start API
