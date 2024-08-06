@@ -1,22 +1,22 @@
 /*
-Form for SMILE string Submission
+Form for File Submission
 */ 
 import { useState } from "react";
 import styles from '../../styles/Landing.module.css'; 
 import axios from 'axios';
 
-const SMILESForm = () => {
-    // Create state
-    const [smilesString, setSmilesString] = useState("")
-    const [filePath, setFilePath] = useState('')
+const FileForm = () => {
+    // Create file state
+    const [structureFile, setStructureFile] = useState(null);
+    const [filePath, setFilePath] = useState('');
 
     // Use axios to handle multiple objects including files
-    function handleSubmit(event) { 
+    function handleSubmit(event) {
         event.preventDefault();
 
-        const url = process.env.NEXT_PUBLIC_BASE_URL + '/api/text-input'; 
+        const url = process.env.NEXT_PUBLIC_BASE_URL + '/api/file-input';
         const formData = new FormData();
-        formData.append('smilesString', smilesString);
+        formData.append('structureFile', structureFile);
 
         // Log the formData entries
         for (let pair of formData.entries()) {
@@ -28,11 +28,10 @@ const SMILESForm = () => {
                 'content-type': 'multipart/form-data',
             },
         };
-        
+
         // Send request to API and handle response
         axios.post(url, formData, config)
             .then((response) => {
-
                 // Handle success
                 if (response.status >= 200 && response.status < 300) {
                     const file_path = response.data.filePath;
@@ -44,14 +43,14 @@ const SMILESForm = () => {
                 }
             })
             .catch((error) => {
-                console.error("Error uploading SMILES string: ", error);
+                console.error("Error uploading file: ", error);
             });
     }
 
     // Function to handle file download
     const handleDownload = () => {
         axios({
-            url: filePath, // Use the zipPath from the state
+            url: filePath, // Use the filePath from the state
             method: 'GET',
             responseType: 'blob', // important
         }).then((response) => {
@@ -61,7 +60,7 @@ const SMILESForm = () => {
             // create "a" HTML element with href to file & click
             const link = document.createElement('a');
             link.href = href;
-            link.setAttribute('download', 'file.txt'); // or any other extension
+            link.setAttribute('download', 'result_file.ext'); // replace with appropriate file extension
             document.body.appendChild(link);
             link.click();
 
@@ -70,17 +69,18 @@ const SMILESForm = () => {
                 document.body.removeChild(link);
             }
             URL.revokeObjectURL(href);
+        }).catch((error) => {
+            console.error("Error downloading file: ", error);
         });
-    };  
+    };
 
     return (
         <form className={styles.create} onSubmit={handleSubmit}>
-            {/* Input field for SMILES string */}
+            {/* Input button for structure file */}
             <input 
-                type="text" 
-                placeholder="Enter SMILES string"
-                onChange={(e) => setSmilesString(e.target.value)}
-                value={smilesString}
+                type="file" 
+                name="structureFile" 
+                onChange={(e) => setStructureFile(e.target.files[0])}
                 required 
             />
 
@@ -89,7 +89,7 @@ const SMILESForm = () => {
                 <input type="submit" value="Submit" />
             </div>
 
-            {/* Download button, shown only when zipPath is available */}
+            {/* Download button, shown only when filePath is available */}
             {filePath && (
                 <div>
                     <button type="button" onClick={handleDownload}>
@@ -101,4 +101,4 @@ const SMILESForm = () => {
     );
 }
 
-export default SMILESForm;
+export default FileForm;
