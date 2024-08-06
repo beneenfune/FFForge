@@ -1,0 +1,40 @@
+.body {
+    margin: 0;
+    padding: 0;
+    background-color: white;
+}
+
+.content {
+    font-family: system-ui;
+    background-color: white;
+    padding: 20px;
+}
+
+.heading3 {
+    font-size: 18px;
+    margin: 15px 0;
+    margin-left: 30px; 
+}
+
+.link {
+    margin-left: 55px;
+    font-size: 16px;
+    color: blue;
+    text-decoration: underline;
+    display: block;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: system-ui;
+}
+
+.clickedLink {
+    margin-left: 55px;
+    font-size: 16px;
+    color: blue;
+    display: block;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: system-ui;
+}

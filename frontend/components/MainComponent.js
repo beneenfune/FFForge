@@ -1,6 +1,6 @@
 // components/MainHeaderComponent.js
 import React from 'react';
-import styles from './MainComponent.module.css'; 
+import styles from '../styles/MainComponent.module.css'; 
 
 const MainComponent = () => {
   return (

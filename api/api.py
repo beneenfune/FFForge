@@ -104,11 +104,23 @@ class DemoDownload(Resource):
 class Landing(Resource):
     def get(self):
         return {'land': 'welcome to landing page'}
+    
+# Route for SMILES Text input Page
+class TextInput(Resource):
+    def get(self):
+        return {'text': 'welcome to text input page'}
+    
+# Route for File Input Page
+class FileInput(Resource):
+    def get(self):
+        return {'land': 'welcome to file input page'}
 
 api.add_resource(Home, '/api/')
 api.add_resource(DemoGenerator, '/api/demo_gen/')
 api.add_resource(DemoDownload, '/static/<path:path>')
 api.add_resource(Landing, '/api/landing/')
+api.add_resource(TextInput, '/api/text-input/')
+api.add_resource(FileInput, '/api/file-input/')
 
 
 

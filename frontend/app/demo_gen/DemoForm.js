@@ -18,9 +18,8 @@ const DemoForm = () => {
     const [zipPath, setZipPath] = useState('')
 
     // Use axios to handlie multiple objects including files
-    function handleSubmit(event) {
-        event.preventDefault();
-        const url = process.env.NEXT_PUBLIC_BASE_URL + '/api/demo_gen'; // TODO: potentially add back local host if doesnt work
+    function handleSubmit(event) {        event.preventDefault();
+        const url = process.env.NEXT_PUBLIC_BASE_URL + '/api/demo_gen'; 
         const formData = new FormData();
         formData.append('structname', structName);
         formData.append('starttemp', startTemp);
