@@ -22,12 +22,12 @@ def after_request(response):
 # Route for Home page
 class Home(Resource):
     def get(self):
-        return {'homepage': 'homepage yokoso'}
+        return {'homepage': 'welcome to homepage'}
 
 # Route for Demo Generator
 class DemoGenerator(Resource):
     def get(self):
-        return {'demo_gen': 'demo generator yokoso'}
+        return {'demo_gen': 'welcome to demo generator'}
     
     def post(self):
 
@@ -99,10 +99,17 @@ class DemoGenerator(Resource):
 class DemoDownload(Resource):
     def get(self, path):
         return send_from_directory('static', path)
+    
+# Route for Landing Page
+class Landing(Resource):
+    def get(self):
+        return {'land': 'welcome to landing page'}
 
 api.add_resource(Home, '/api/')
 api.add_resource(DemoGenerator, '/api/demo_gen/')
 api.add_resource(DemoDownload, '/static/<path:path>')
+api.add_resource(Landing, '/api/landing/')
+
 
 
 

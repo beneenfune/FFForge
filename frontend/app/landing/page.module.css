@@ -1,0 +1,24 @@
+.body {
+    margin: 0;
+    padding: 0;
+    background-color: white;
+}
+
+.content {
+    font-family: system-ui;
+    background-color: white;
+    padding: 20px;
+}
+
+.heading3 {
+    font-size: 18px;
+    margin: 15px 0; /* Adjust margin-top and margin-bottom as needed */
+    margin-left: 30px; /* Adjust this value as needed to match indentation */
+}
+
+.link {
+    margin-left: 55px;
+    color: blue;
+    text-decoration: underline;
+    display: block;
+}
