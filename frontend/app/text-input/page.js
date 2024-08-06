@@ -6,7 +6,6 @@ import styles from '../../styles/Landing.module.css';
 import MainComponent from '../../components/MainComponent'; 
 import SMILESForm from './SMILEForm';
 
-
 export default function TextInput() {
     
   // Create states
@@ -38,7 +37,7 @@ export default function TextInput() {
           
           <div className={styles.content}>
             <h3 className={styles.heading3}>Select a way to begin generating your forcefield:</h3>
-            <p><button onClick={navigateToTextInput} className={styles.clickedLink}>Input a SMILES Structure Text</button></p>
+            <p><button onClick={navigateToTextInput} className={styles.clickedLink}>Input a SMILES structure text</button></p>
             <SMILESForm />
           
           </div>

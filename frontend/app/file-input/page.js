@@ -19,7 +19,7 @@ export default function FileInput() {
             const data = await response.json()
 
             if ( response.ok ){
-                setMessage(data.text);
+                setMessage(data.file);
                 setLoading(false);
                 console.log("File Inputter Visiualized")
             }
@@ -36,7 +36,7 @@ export default function FileInput() {
             <h3 className={styles.heading3}>Select a way to begin generating your forcefield:</h3>
             <p><button onClick={navigateToFileInput} className={styles.clickedLink}>Input a structure file (*.mol, *.bgf, *.cif, *.xyz, *.pdb)</button></p>
             <FileForm />
-            
+
           </div>
         </div>
       );

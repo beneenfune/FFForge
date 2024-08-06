@@ -6,7 +6,7 @@ import styles from '../../styles/Landing.module.css';
 import axios from 'axios';
 
 const SMILESForm = () => {
-    // Create state
+    // Create string state
     const [smilesString, setSmilesString] = useState("")
     const [filePath, setFilePath] = useState('')
 

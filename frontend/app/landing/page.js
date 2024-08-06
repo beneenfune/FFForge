@@ -33,7 +33,7 @@ export default function Home() {
           
           <div className={styles.content}>
             <h3 className={styles.heading3}>Select a way to begin generating your forcefield:</h3>
-            <p><button onClick={navigateToTextInput} className={styles.link}>Input a SMILES Structure Text</button></p>
+            <p><button onClick={navigateToTextInput} className={styles.link}>Input a SMILES structure text</button></p>
             <p><button onClick={navigateToFileInput} className={styles.link}>Input a structure file (*.mol, *.bgf, *.cif, *.xyz, *.pdb)</button></p>
             <p><button onClick={navigateToKetcher} className={styles.link}>Design a structure with GUI</button></p>
           </div>
