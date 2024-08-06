@@ -13,7 +13,7 @@
 .heading3 {
     font-size: 18px;
     margin: 15px 0;
-    margin-left: 30px; 
+    margin-left: 20px; 
 }
 
 .link {
@@ -37,4 +37,27 @@
     border: none;
     cursor: pointer;
     font-family: system-ui;
+}
+
+.create {
+    margin: 20px;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.create input[type="text"],
+.create input[type="number"],
+.create input[type="file"],
+.create input[type="submit"],
+.create button {
+    display: block;
+    width: calc(100% - 20px); 
+    margin: 10px 0 20px 10px;
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
 }

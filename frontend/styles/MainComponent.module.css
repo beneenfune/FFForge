@@ -8,11 +8,11 @@
 .heading1 {
     margin: 0;
     font-size: 24px;
-    margin-left: 20px; /* Adjust this value as needed to match indentation */
+    margin-left: 10px; /* Adjust this value as needed to match indentation */
 }
 
 .heading2 {
     margin: 5px 0 0;
     font-size: 16px;
-    margin-left: 20px; /* Adjust this value as needed to match indentation */
+    margin-left: 10px; /* Adjust this value as needed to match indentation */
 }
