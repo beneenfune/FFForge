@@ -113,12 +113,12 @@ class TextInput(Resource):
 # Route for File Input Page
 class FileInput(Resource):
     def get(self):
-        return {'file': 'welcome to file input page'}
+        return {'land': 'welcome to file input page'}
     
-# Route for Structure Verification Page
-class VerifyStructure(Resource):
+# Route for File Input Page
+class Ketcher(Resource):
     def get(self):
-        return {'verify': 'welcome to the structure verification page'}
+        return {'design': 'welcome to the design page'}
 
 api.add_resource(Home, '/api/')
 api.add_resource(DemoGenerator, '/api/demo_gen/')
@@ -126,9 +126,7 @@ api.add_resource(DemoDownload, '/static/<path:path>')
 api.add_resource(Landing, '/api/landing/')
 api.add_resource(TextInput, '/api/text-input/')
 api.add_resource(FileInput, '/api/file-input/')
-api.add_resource(VerifyStructure, '/api/check/')
-
-
+api.add_resource(Ketcher, '/api/edit/')
 
 
 
