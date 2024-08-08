@@ -9,6 +9,7 @@
     margin: 0;
     font-size: 24px;
     margin-left: 10px; /* Adjust this value as needed to match indentation */
+    cursor: pointer;
 }
 
 .heading2 {

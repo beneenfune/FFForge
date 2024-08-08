@@ -9,4 +9,5 @@
     margin: 0;
     font-size: 20px;
     margin-left: 10px; /* Adjust this value as needed to match indentation */
+    cursor: pointer;
 }

@@ -1,11 +1,15 @@
 // components/MainHeaderComponent.js
 import React from 'react';
 import styles from '../styles/MinMainComponent.module.css'; 
+import { useNavigation } from '../utils/navigation';
+
 
 const MinMainComponent = () => {
+  const { navigateToLanding } = useNavigation();
+
   return (
     <div className={styles.header}>
-      <h1 className={styles.heading1}>FFForge - Tool to generate forcefields for polymer structures</h1>
+      <h1 className={styles.heading1} onClick={navigateToLanding} >FFForge - Tool to generate forcefields for polymer structures</h1>
     </div>
   );
 }

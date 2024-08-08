@@ -13,12 +13,23 @@ export const useNavigation = () => {
     };
 
     const navigateToKetcher = () => {
-        router.push('/ketcher');
+        router.push('/edit');
     };
+
+    const navigateToLanding = () => {
+        router.push('/landing');
+    };
+
+    const navigateToVisualize = () => {
+        router.push('/visualize');
+    };
+
 
     return {
         navigateToTextInput,
         navigateToFileInput,
-        navigateToKetcher
+        navigateToKetcher,
+        navigateToLanding,
+        navigateToVisualize
     };
 };

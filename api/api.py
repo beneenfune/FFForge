@@ -119,6 +119,53 @@ class FileInput(Resource):
 class Ketcher(Resource):
     def get(self):
         return {'design': 'welcome to the design page'}
+    
+
+class TempFileHandler(Resource):
+    def get(self, filename):
+        # parser = reqparse.RequestParser()
+        # parser.add_argument('filename', type=str, help='The file name that you wish to retrieve from the temp directory')
+        # args = parser.parse_args()
+
+        # TODO - Add error handling for file not found
+        # TODO - Prevent directory traversal attacks by changing how this is done
+        with open(f'temp/{filename}', 'r') as f:
+            output = f.read()
+        
+        return {"content": output}
+    
+class Visualize(Resource):
+    def get(self):
+        return {'visualize': 'welcome to the visualization page'}
+
+    def post(self):
+        # Parse the input data
+        parser = reqparse.RequestParser()
+        parser.add_argument('molfile', type=str, help='The molfile input (v2000)')
+        args = parser.parse_args()
+
+        # Find an unused filename from molfile1.mol, molfile2.mol, ...
+        if not os.path.exists('temp'):
+            os.makedirs('temp')
+        
+        i = 1
+        while os.path.exists(f'temp/molfile{i}.mol'):
+            i += 1
+
+        # Save the molfile to a new file in the temp directory
+        with open(f'temp/molfile{i}.mol', 'w') as f:
+            f.write(args['molfile'])
+
+        # Run the scripts to generate output files
+
+        # Read output files and return the data
+        with open(f'temp/molfile{i}.mol', 'r') as f:
+            output = f.read()
+
+        # Delete all the temp files created in the process
+        os.remove(f'temp/molfile{i}.mol')
+
+        return {'output': output}
 
 api.add_resource(Home, '/api/')
 api.add_resource(DemoGenerator, '/api/demo_gen/')
@@ -127,6 +174,8 @@ api.add_resource(Landing, '/api/landing/')
 api.add_resource(TextInput, '/api/text-input/')
 api.add_resource(FileInput, '/api/file-input/')
 api.add_resource(Ketcher, '/api/edit/')
+api.add_resource(Visualize, '/api/visualize')
+api.add_resource(TempFileHandler, '/api/getfile/<string:filename>')
 
 
 
