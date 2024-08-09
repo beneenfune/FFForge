@@ -11,6 +11,9 @@
   "dependencies": {
     "axios": "^1.7.2",
     "bootstrap": "^5.3.3",
+    "canvas": "^2.11.2",
+    "chart.js": "^4.4.3",
+    "chartjs-plugin-downsample": "^1.1.0",
     "ketcher-core": "^2.20.0",
     "ketcher-react": "^2.20.0",
     "ketcher-standalone": "^2.20.0",
