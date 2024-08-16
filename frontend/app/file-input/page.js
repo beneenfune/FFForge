@@ -11,7 +11,7 @@ export default function FileInput() {
     const [loading, setLoading] = useState(true);
     const { navigateToFileInput } = useNavigation();
 
-    
+    /*
     // Fetch data from the API
     useEffect(() => {
         const fetchFileInput = async () => {
@@ -26,6 +26,7 @@ export default function FileInput() {
         }
         fetchFileInput()
     }, []);
+    */
 
         
     return (

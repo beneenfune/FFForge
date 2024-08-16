@@ -1,7 +1,10 @@
-from __init__ import api
+from __init__ import api, db
 
-from flask import request, send_from_directory, url_for
+from flask import request, send_from_directory, url_for, jsonify, make_response
 from flask_restful import Resource, reqparse
+from werkzeug.utils import secure_filename
+from utils.demo import mlff_trj_gen, zip_dir, remove_dir
+from bson.binary import Binary
 
 import os
 import subprocess
@@ -109,12 +112,33 @@ class TextInput(Resource):
         return {
             'smiles_string': smiles 
         }
-
+    
     
 # Route for File Input Page
 class FileInput(Resource):
     def get(self):
-        return {'file': 'welcome to file input page', 'test-text':'example.xyz'}
+        # Get the filename from query parameters
+        filename = request.args.get('filename')
+    
+        if not filename:
+            return jsonify({"error": "Filename query parameter is missing."}), 400
+        
+        # Retrieve the file from MongoDB
+        file_record = db.input_files.find_one({"filename": filename})
+        
+        if not file_record:
+            return jsonify({"error": "File not found"}), 404
+        
+        # Create a response to send the file back
+        file_data = file_record['file_data']
+        content_type = file_record.get('content_type', 'application/octet-stream')
+
+        # Prepare file for download
+        response = make_response(file_data)
+        response.headers.set('Content-Type', content_type)
+        response.headers.set('Content-Disposition', f'attachment; filename={filename}')
+        
+        return response
     
     def post(self):
         # Create new files in temp directory
@@ -128,17 +152,26 @@ class FileInput(Resource):
 
         # Save file to the new files in the temp directory
         if structure_file:
-            structure_file_path = os.path.join('structure', 'structure_file.txt')
-            structure_file.save(structure_file_path)
 
-        console.log("Structure file processed in Flask API")
+            # Secure the filename
+            structure_filename = secure_filename(structure_file.filename)
 
-        subprocess.call('mv {} static/'.format(structure_file_path), shell=True)
-        full_path = url_for('static', filename='structure_file.txt', _external=True)
+            # Read the file's content as binary
+            file_data = structure_file.read()
 
-        return {
-            'structure_path': full_path 
-        }
+            # Insert the file data into the MongoDB collection
+            db.input_files.insert_one({
+                "filename": structure_filename,
+                "file_data": Binary(file_data),
+                "content_type": structure_file.content_type
+            })
+
+            return jsonify ({
+                "message": "File uploaded and saved to MongoDB.",
+                'fileName' : structure_filename
+            })
+        else:
+            return jsonify({"error": "No file uploaded."}), 400
 
 
 

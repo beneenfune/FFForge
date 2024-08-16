@@ -2,7 +2,6 @@ from flask import Flask, request
 from flask_restful import Api
 from flask_pymongo import PyMongo
 from dotenv import load_dotenv
-
 import os
 
 app = Flask(__name__)
