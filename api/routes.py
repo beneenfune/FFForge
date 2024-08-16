@@ -1,4 +1,4 @@
-from api import api
+from __init__ import api
 
 from flask import request, send_from_directory, url_for
 from flask_restful import Resource, reqparse
@@ -98,12 +98,50 @@ class Landing(Resource):
 # Route for SMILES Text input Page
 class TextInput(Resource):
     def get(self):
-        return {'text': 'welcome to text input page'}
+        return {'text': 'welcome to text input page', 'test-text':'H2o'}
+    
+    def post(self):
+
+        # Access request data
+        smiles = request.get('smiles_string')
+        console.log("SMILES string processed in Flask API")
+
+        return {
+            'smiles_string': smiles 
+        }
+
     
 # Route for File Input Page
 class FileInput(Resource):
     def get(self):
-        return {'land': 'welcome to file input page'}
+        return {'file': 'welcome to file input page', 'test-text':'example.xyz'}
+    
+    def post(self):
+        # Create new files in temp directory
+        if not os.path.exists('static'):
+            os.makedirs('static')
+
+        static_dir = os.path.join('static')
+
+        # Process and save the structure files
+        structure_file = request.files.get('structure_file')
+
+        # Save file to the new files in the temp directory
+        if structure_file:
+            structure_file_path = os.path.join('structure', 'structure_file.txt')
+            structure_file.save(structure_file_path)
+
+        console.log("Structure file processed in Flask API")
+
+        subprocess.call('mv {} static/'.format(structure_file_path), shell=True)
+        full_path = url_for('static', filename='structure_file.txt', _external=True)
+
+        return {
+            'structure_path': full_path 
+        }
+
+
+
     
 # Route for File Input Page
 class Ketcher(Resource):
@@ -157,6 +195,10 @@ class Visualize(Resource):
 
         return {'output': output}
 
+class Test_DB(Resource):
+    def post(self):
+        return 1
+    
 api.add_resource(Home, '/api/')
 api.add_resource(DemoGenerator, '/api/demo_gen/')
 api.add_resource(DemoDownload, '/static/<path:path>')

@@ -9,8 +9,6 @@ python3 -m venv .venv
 pip3 install -r requirements.txt
 ```
 
-new change
-
 ## Running the App
 
 - Run the `api.py` file when in the `api` directory: `python3 api.py`
