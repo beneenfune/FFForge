@@ -2,6 +2,7 @@ from __init__ import api
 
 from flask import request, send_from_directory, url_for
 from flask_restful import Resource, reqparse
+from utils.demo import mlff_trj_gen, remove_dir, zip_dir
 
 import os
 import subprocess
@@ -104,7 +105,7 @@ class TextInput(Resource):
 
         # Access request data
         smiles = request.get('smiles_string')
-        console.log("SMILES string processed in Flask API")
+        print("SMILES string processed in Flask API")
 
         return {
             'smiles_string': smiles 
@@ -113,27 +114,29 @@ class TextInput(Resource):
     
 # Route for File Input Page
 class FileInput(Resource):
-    def get(self):
-        return {'file': 'welcome to file input page', 'test-text':'example.xyz'}
+    def get(self, path):
+        return send_from_directory('static', path)
     
     def post(self):
         # Create new files in temp directory
         if not os.path.exists('static'):
             os.makedirs('static')
 
-        static_dir = os.path.join('static')
-
         # Process and save the structure files
-        structure_file = request.files.get('structure_file')
+        structure_file = request.files.get('structureFile')
 
-        # Save file to the new files in the temp directory
+        # Initialize the file path variable
+        structure_file_path = ""
+
+        # Save file to the new files in the static directory
         if structure_file:
-            structure_file_path = os.path.join('structure', 'structure_file.txt')
-            structure_file.save(structure_file_path)
-
-        console.log("Structure file processed in Flask API")
-
-        subprocess.call('mv {} static/'.format(structure_file_path), shell=True)
+            try:
+                structure_file_path = os.path.join('static', 'structure_file.txt')
+                structure_file.save(structure_file_path)
+            except Exception as e:
+                return {'error': f"Failed to save structure file: {str(e)}"}, 500
+            
+        print("the structure_file_path is "+structure_file_path)
         full_path = url_for('static', filename='structure_file.txt', _external=True)
 
         return {
