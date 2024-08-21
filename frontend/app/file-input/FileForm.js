@@ -6,15 +6,13 @@ import styles from "../../styles/Landing.module.css";
 import axios from "axios";
 
 const FileForm = () => {
-  // Create states for form data
+  // Create file state
   const [structureFile, setStructureFile] = useState(null);
-  const [fileName, setFileName] = useState("");
-  const [message, setMessage] = useState("");
+  const [filePath, setFilePath] = useState("");
 
-  // Use axios to handle file object
+  // Use axios to handle multiple objects including files
   function handleSubmit(event) {
     event.preventDefault();
-
     const url = process.env.NEXT_PUBLIC_BASE_URL + "/api/file-input";
     const formData = new FormData();
     formData.append("structureFile", structureFile);
@@ -36,14 +34,9 @@ const FileForm = () => {
       .then((response) => {
         // Handle success
         if (response.status >= 200 && response.status < 300) {
-          const message = response.data.message;
-          const file_name = response.data.fileName;
-          setMessage(message);
-          setFileName(file_name);
-
-          // Show success message and name of file on console
-          console.log(response.data.message);
-          console.log(response.data.fileName);
+          const file_path = response.data.structure_path;
+          setFilePath(file_path); // Set the file path in the state
+          console.log("The file_path is " + filePath);
         } else {
           // Handle error if status code is not in the range of 2xx
           throw new Error(`HTTP error: ${response.status}`);
@@ -53,28 +46,26 @@ const FileForm = () => {
         console.error("Error uploading file: ", error);
       });
   }
-  // TODO: change the downloaded file as the fileName in the state
+
   // Function to handle file download
   const handleDownload = () => {
-    const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/file-input?filename=${fileName}`;
-
     axios({
-      url: url, // Use the filePath from the state
+      url: filePath, // Use the filePath from the state
       method: "GET",
-      responseType: "blob", // important to represent file
+      responseType: "blob", // important
     })
       .then((response) => {
-        // Create file link in browser's memory
+        // create file link in browser's memory
         const href = URL.createObjectURL(response.data);
 
-        // Create "a" HTML element with href to file & click
+        // create "a" HTML element with href to file & click
         const link = document.createElement("a");
         link.href = href;
-        link.setAttribute("download", fileName);
+        link.setAttribute("download", "structure_file.txt"); // replace with appropriate file extension
         document.body.appendChild(link);
         link.click();
 
-        // Clean up "a" element & remove ObjectURL
+        // clean up "a" element & remove ObjectURL
         if (document.body.contains(link)) {
           document.body.removeChild(link);
         }
@@ -90,7 +81,10 @@ const FileForm = () => {
       {/* Input button for structure file */}
       <input
         type="file"
+<<<<<<< HEAD
         name="structureFile"
+=======
+>>>>>>> beneen-files-in-backend
         onChange={(e) => setStructureFile(e.target.files[0])}
         required
       />
@@ -100,11 +94,16 @@ const FileForm = () => {
         <input type="submit" value="Submit" />
       </div>
 
+<<<<<<< HEAD
       {/* Display the message */}
       {message && <p>{message}</p>}
 
       {/* Download button, shown only when fileName is available */}
       {fileName && (
+=======
+      {/* Download button, shown only when filePath is available */}
+      {filePath && (
+>>>>>>> beneen-files-in-backend
         <div>
           <button type="button" onClick={handleDownload}>
             Download File

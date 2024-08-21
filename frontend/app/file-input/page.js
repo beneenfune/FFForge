@@ -7,26 +7,25 @@ import MainComponent from '../../components/MainComponent';
 import FileForm from './FileForm';
 
 export default function FileInput() {
-    const [message, setMessage] = useState("");
-    const [loading, setLoading] = useState(true);
+    // const [message, setMessage] = useState("");
+    // const [loading, setLoading] = useState(true);
     const { navigateToFileInput } = useNavigation();
 
-    /*
-    // Fetch data from the API
-    useEffect(() => {
-        const fetchFileInput = async () => {
-            const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL +'/api/file-input')
-            const data = await response.json()
+    
+    // // Fetch data from the API
+    // useEffect(() => {
+    //     const fetchFileInput = async () => {
+    //         const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL +'/api/file-input')
+    //         const data = await response.json()
 
-            if ( response.ok ){
-                setMessage(data.file);
-                setLoading(false);
-                console.log("File Inputter Visiualized")
-            }
-        }
-        fetchFileInput()
-    }, []);
-    */
+    //         if ( response.ok ){
+    //             setMessage(data.file);
+    //             setLoading(false);
+    //             console.log("File Inputter Visiualized")
+    //         }
+    //     }
+    //     fetchFileInput()
+    // }, []);
 
         
     return (

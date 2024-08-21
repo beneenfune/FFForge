@@ -16,6 +16,7 @@ const DemoForm = () => {
   const [slurmFile, setSlurmFile] = useState(null);
   const [zipPath, setZipPath] = useState("");
 
+<<<<<<< HEAD
   // Use axios to handle multiple objects including files
   function handleSubmit(event) {
     event.preventDefault();
@@ -30,11 +31,30 @@ const DemoForm = () => {
     formData.append("datafile", dataFile);
     formData.append("slurmfile", slurmFile);
 
+=======
+  // Use axios to handlie multiple objects including files
+  function handleSubmit(event) {
+    event.preventDefault();
+    const url = process.env.NEXT_PUBLIC_BASE_URL + "/api/demo_gen";
+    const formData = new FormData();
+    formData.append("structname", structName);
+    formData.append("starttemp", startTemp);
+    formData.append("steptemp", stepTemp);
+    formData.append("endtemp", endTemp);
+    formData.append("infile", inFile);
+    formData.append("datafile", dataFile);
+    formData.append("slurmfile", slurmFile);
+
+>>>>>>> beneen-files-in-backend
     // Log the formData entries
     for (let pair of formData.entries()) {
       console.log(pair[0] + ": " + pair[1]);
     }
 
+<<<<<<< HEAD
+=======
+    // https://www.filestack.com/fileschool/react/react-file-upload/
+>>>>>>> beneen-files-in-backend
     const config = {
       headers: {
         "content-type": "multipart/form-data",
@@ -67,26 +87,22 @@ const DemoForm = () => {
     axios({
       url: zipPath, // Use the zipPath from the state
       method: "GET",
-      responseType: "blob", // important to represent file
-    })
-      .then((response) => {
-        // create file link in browser's memory
-        const href = URL.createObjectURL(response.data);
+      responseType: "blob", // important
+    }).then((response) => {
+      // create file link in browser's memory
+      const href = URL.createObjectURL(response.data);
 
-        // create "a" HTML element with href to file & click
-        const link = document.createElement("a");
-        link.href = href;
-        link.setAttribute("download", "demo.zip"); // or any other extension
-        document.body.appendChild(link);
-        link.click();
+      // create "a" HTML element with href to file & click
+      const link = document.createElement("a");
+      link.href = href;
+      link.setAttribute("download", "demo.zip"); // or any other extension
+      document.body.appendChild(link);
+      link.click();
 
-        // clean up "a" element & remove ObjectURL
-        document.body.removeChild(link);
-        URL.revokeObjectURL(href);
-      })
-      .catch((error) => {
-        console.error("Error downloading file: ", error);
-      });
+      // clean up "a" element & remove ObjectURL
+      document.body.removeChild(link);
+      URL.revokeObjectURL(href);
+    });
   };
 
   return (
