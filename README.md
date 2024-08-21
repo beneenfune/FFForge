@@ -1,6 +1,10 @@
 # FFForge
 
-## Install Required Software
+TODO: Insert Project Summary here
+
+## Setting Up the Development Environment
+
+### Install Required Software
 
 - [Install](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) `Node.js` and `npm`
 - Install Python 3.10
