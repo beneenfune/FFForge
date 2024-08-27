@@ -81,10 +81,6 @@ const FileForm = () => {
       {/* Input button for structure file */}
       <input
         type="file"
-<<<<<<< HEAD
-        name="structureFile"
-=======
->>>>>>> beneen-files-in-backend
         onChange={(e) => setStructureFile(e.target.files[0])}
         required
       />
@@ -94,16 +90,8 @@ const FileForm = () => {
         <input type="submit" value="Submit" />
       </div>
 
-<<<<<<< HEAD
-      {/* Display the message */}
-      {message && <p>{message}</p>}
-
-      {/* Download button, shown only when fileName is available */}
-      {fileName && (
-=======
       {/* Download button, shown only when filePath is available */}
       {filePath && (
->>>>>>> beneen-files-in-backend
         <div>
           <button type="button" onClick={handleDownload}>
             Download File
