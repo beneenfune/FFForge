@@ -1,50 +1,50 @@
 .body {
-    margin: 0;
-    padding: 0;
-    background-color: white;
+  margin: 0;
+  padding: 0;
+  background-color: white;
 }
 
 .content {
-    font-family: system-ui;
-    background-color: white;
-    padding: 20px;
+  font-family: system-ui;
+  background-color: white;
+  padding: 20px;
 }
 
 .heading3 {
-    font-size: 18px;
-    margin: 15px 0;
-    margin-left: 20px; 
+  font-size: 18px;
+  margin: 15px 0;
+  margin-left: 20px;
 }
 
 .link {
-    margin-left: 55px;
-    font-size: 16px;
-    color: blue;
-    text-decoration: underline;
-    display: block;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-family: system-ui;
+  margin-left: 55px;
+  font-size: 16px;
+  color: blue;
+  text-decoration: underline;
+  display: block;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: system-ui;
 }
 
 .clickedLink {
-    margin-left: 55px;
-    font-size: 16px;
-    color: blue;
-    display: block;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-family: system-ui;
+  margin-left: 55px;
+  font-size: 16px;
+  color: blue;
+  display: block;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: system-ui;
 }
 
 .create {
-    margin: 20px;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: #f9f9f9;
+  margin: 20px;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
 }
 
 .create input[type="text"],
@@ -52,12 +52,20 @@
 .create input[type="file"],
 .create input[type="submit"],
 .create button {
-    display: block;
-    width: calc(100% - 20px); 
-    margin: 10px 0 20px 10px;
-    margin-bottom: 20px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-sizing: border-box;
+  display: block;
+  width: calc(100% - 20px);
+  margin: 10px 0 20px 10px;
+  margin-bottom: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+
+.successMessage {
+  color: green;
+  margin-left: 10px;
+  margin-top: 10px;
+  font-style: italic;
+  font-size: 13px;
 }

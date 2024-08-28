@@ -11,14 +11,9 @@ api = Api(app)
 # Load environment variables from .env file
 load_dotenv()
 
-# Configure app to connect to databases
+# Configure app
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 app.config["MONGO_URI"] = os.getenv("MONGO_URI")
-
-# Setup MongoDB
-# mongodb_client = PyMongo(app)
-# db = mongodb_client.db
-#db.connect(os.getenv("MONGO_URI"))
 
 # For CORS
 @app.after_request

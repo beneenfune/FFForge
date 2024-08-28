@@ -1,12 +1,14 @@
-from __init__ import api, db
+from __init__ import api
 
 from flask import request, send_from_directory, url_for, jsonify, make_response
 from flask_restful import Resource, reqparse
 from utils.demo import mlff_trj_gen, remove_dir, zip_dir
+from utils.sfapi import upload_file
 
 import os
 import subprocess
-import requests
+# import requests
+import asyncio
 import numpy as np
 
 
@@ -139,20 +141,23 @@ class FileInput(Resource):
             
             print("The structure_file_path is " + structure_file_path)
             full_path = url_for('static', filename=original_filename, _external=True)
+            root_dir = os.getenv("ROOT_DIR")
 
             # Use sfapi to upload the file to the supercomputer
-            # TODO
+            try:
+                # Run the asynchronous upload_file function
+                asyncio.run(upload_file(structure_file_path, root_dir))
+            except Exception as e:
+                return {'error': f"Failed to upload file to Perlmutter: {str(e)}"}, 500
 
             return jsonify ({
-                "message": "File uploaded and saved to Perlmutter.",
+                "message": "File uploaded and saved to local backend and Perlmutter.",
                 'structure_path' : full_path
             })
         else:
             return jsonify({"error": "No file uploaded."}), 400
 
 
-
-    
 # Route for File Input Page
 class Ketcher(Resource):
     def get(self):

@@ -3,12 +3,12 @@ from sfapi_client.compute import Machine
 from sfapi_client import Resource
 from authlib.jose import JsonWebKey
 from dotenv import load_dotenv
+from io import BytesIO
 
 import asyncio
 import json
 import os
 import sys
-from io import BytesIO
 
 # Load environment variables from .env file
 load_dotenv()

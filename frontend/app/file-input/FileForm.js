@@ -9,7 +9,7 @@ const FileForm = () => {
   // Create file state
   const [structureFile, setStructureFile] = useState(null);
   const [filePath, setFilePath] = useState("");
-  const [message, setMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState(""); // State to store success message
 
   // Use axios to handle multiple objects including files
   function handleSubmit(event) {
@@ -38,7 +38,7 @@ const FileForm = () => {
           const file_path = response.data.structure_path;
           const message = response.data.message;
           setFilePath(file_path); // Set the file path in the state
-          setSuccessMessage(message); // Set the success message in the state
+          setSuccessMessage(response.data.message); // Set the success message in the state
           console.log("The file_path is " + filePath);
         } else {
           // Handle error if status code is not in the range of 2xx
@@ -107,6 +107,13 @@ const FileForm = () => {
       <div>
         <input type="submit" value="Submit" />
       </div>
+
+      {/* Display success message if available */}
+      {successMessage && (
+        <div>
+          <p className={styles.successMessage}>{successMessage}</p>
+        </div>
+      )}
 
       {/* Download button, shown only when filePath is available */}
       {filePath && (
