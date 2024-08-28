@@ -9,6 +9,7 @@ const FileForm = () => {
   // Create file state
   const [structureFile, setStructureFile] = useState(null);
   const [filePath, setFilePath] = useState("");
+  const [message, setMessage] = useState("");
 
   // Use axios to handle multiple objects including files
   function handleSubmit(event) {
@@ -35,7 +36,9 @@ const FileForm = () => {
         // Handle success
         if (response.status >= 200 && response.status < 300) {
           const file_path = response.data.structure_path;
+          const message = response.data.message;
           setFilePath(file_path); // Set the file path in the state
+          setSuccessMessage(message); // Set the success message in the state
           console.log("The file_path is " + filePath);
         } else {
           // Handle error if status code is not in the range of 2xx
@@ -52,16 +55,31 @@ const FileForm = () => {
     axios({
       url: filePath, // Use the filePath from the state
       method: "GET",
-      responseType: "blob", // important
+      responseType: "blob", // Important
     })
       .then((response) => {
+        // Extract the file name from the file path
+        const contentDisposition = response.headers["content-disposition"];
+        let filename = "downloaded_file"; // Default filename
+
+        if (contentDisposition) {
+          const fileNameMatch = contentDisposition.match(/filename="?(.+)"?/);
+          if (fileNameMatch.length === 2) {
+            filename = fileNameMatch[1];
+          }
+        } else {
+          // Fallback to extracting filename from filePath if content-disposition header is missing
+          const filePathParts = filePath.split("/");
+          filename = filePathParts[filePathParts.length - 1];
+        }
+
         // create file link in browser's memory
         const href = URL.createObjectURL(response.data);
 
         // create "a" HTML element with href to file & click
         const link = document.createElement("a");
         link.href = href;
-        link.setAttribute("download", "structure_file.txt"); // replace with appropriate file extension
+        link.setAttribute("download", filename); // Set the download attribute to the original filename
         document.body.appendChild(link);
         link.click();
 

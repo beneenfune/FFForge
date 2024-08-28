@@ -131,24 +131,21 @@ class FileInput(Resource):
         # Save file to the new files in the static directory
         if structure_file:
             try:
-                structure_file_path = os.path.join('static', 'structure_file.txt')
+                original_filename = structure_file.filename
+                structure_file_path = os.path.join('static', original_filename)
                 structure_file.save(structure_file_path)
             except Exception as e:
                 return {'error': f"Failed to save structure file: {str(e)}"}, 500
             
-            print("the structure_file_path is "+structure_file_path)
-            full_path = url_for('static', filename='structure_file.txt', _external=True)
+            print("The structure_file_path is " + structure_file_path)
+            full_path = url_for('static', filename=original_filename, _external=True)
 
-            # Insert the file data into the MongoDB collection
-            db.input_files.insert_one({
-                "filename": structure_filename,
-                "file_data": Binary(file_data),
-                "content_type": structure_file.content_type
-            })
+            # Use sfapi to upload the file to the supercomputer
+            # TODO
 
             return jsonify ({
-                "message": "File uploaded and saved to MongoDB.",
-                'fileName' : structure_filename
+                "message": "File uploaded and saved to Perlmutter.",
+                'structure_path' : full_path
             })
         else:
             return jsonify({"error": "No file uploaded."}), 400

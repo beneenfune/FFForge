@@ -18,7 +18,7 @@ app.config["MONGO_URI"] = os.getenv("MONGO_URI")
 # Setup MongoDB
 # mongodb_client = PyMongo(app)
 # db = mongodb_client.db
-db.connect(os.getenv("MONGO_URI"))
+#db.connect(os.getenv("MONGO_URI"))
 
 # For CORS
 @app.after_request
