@@ -4,7 +4,7 @@ from sfapi_client import Resource
 from authlib.jose import JsonWebKey
 from dotenv import load_dotenv
 from io import BytesIO
-
+from .preprocessing import generate_hash
 import asyncio
 import json
 import os
@@ -60,6 +60,23 @@ async def upload_file(file_path, target_directory):
             await target.upload(file_content)
             print(f"Uploaded {file_path} to {target_directory} on Perlmutter.")
 
+async def create_directory(root_directory, directory_name=generate_hash()):
+    """Create a directory in Perlmutter."""
+    async with AsyncClient(client_id, client_secret) as client:
+        perlmutter = await client.compute(Machine.perlmutter)
+
+        # Combine the root directory with the new directory name
+        new_directory = os.path.join(root_directory, directory_name)
+
+        # Create the directory if it doesn't exist
+        try:
+            await perlmutter.mkdir(new_directory)
+            print(f"Directory {new_directory} created on Perlmutter.")
+        except Exception as e:
+            print(f"Failed to create directory {new_directory}: {str(e)}")
+            raise
+
+        return new_directory
 if __name__ == "__main__":
     if len(sys.argv) != 3:
         print("Usage: python sfapi.py <file_path> <target_directory>")

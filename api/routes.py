@@ -3,7 +3,8 @@ from __init__ import api
 from flask import request, send_from_directory, url_for, jsonify, make_response
 from flask_restful import Resource, reqparse
 from utils.demo import mlff_trj_gen, remove_dir, zip_dir
-from utils.sfapi import upload_file
+from utils.sfapi import upload_file,create_directory
+from utils.preprocessing import generate_hash
 
 import os
 import subprocess
@@ -113,7 +114,6 @@ class TextInput(Resource):
             'smiles_string': smiles 
         }
     
-    
 # Route for File Input Page
 class FileInput(Resource):
     def get(self, path):
@@ -130,23 +130,38 @@ class FileInput(Resource):
         # Initialize the file path variable
         structure_file_path = ""
 
-        # Save file to the new files in the static directory
+        # Save file to the new file in the static directory
         if structure_file:
             try:
                 original_filename = structure_file.filename
-                structure_file_path = os.path.join('static', original_filename)
+                prefix = os.path.splitext(original_filename)[0]
+                extension = os.path.splitext(original_filename)[1]
+                # structure_file_path = os.path.join('static', original_filename)
+                # structure_file.save(structure_file_path)
+                
+                # Generate a unique directory name
+                directory_name = generate_hash()
+
+                # Create a directory in Perlmutter
+                root_dir = os.getenv("ROOT_DIR")
+                new_directory = asyncio.run(create_directory(root_dir, directory_name))
+
+                # Construct the new filename
+                new_filename = f"{prefix}_{directory_name}.{extension}"
+                structure_file_path = os.path.join('static', new_filename)
+                
+                # Save the file with the new filename
                 structure_file.save(structure_file_path)
             except Exception as e:
                 return {'error': f"Failed to save structure file: {str(e)}"}, 500
             
             print("The structure_file_path is " + structure_file_path)
             full_path = url_for('static', filename=original_filename, _external=True)
-            root_dir = os.getenv("ROOT_DIR")
 
             # Use sfapi to upload the file to the supercomputer
             try:
                 # Run the asynchronous upload_file function
-                asyncio.run(upload_file(structure_file_path, root_dir))
+                asyncio.run(upload_file(structure_file_path, new_directory))
             except Exception as e:
                 return {'error': f"Failed to upload file to Perlmutter: {str(e)}"}, 500
 
@@ -157,12 +172,10 @@ class FileInput(Resource):
         else:
             return jsonify({"error": "No file uploaded."}), 400
 
-
-# Route for File Input Page
+# Route for Design GUI Page
 class Ketcher(Resource):
     def get(self):
-        return {'design': 'welcome to the design page'}
-    
+        return {'design': 'welcome to the design page'}  
 
 class TempFileHandler(Resource):
     def get(self, filename):
@@ -213,7 +226,13 @@ class Visualize(Resource):
 class Test_DB(Resource):
     def post(self):
         return 1
-    
+
+# Route for Workspace Page
+class Workspace(Resource):
+    def get(self):
+        return {'workspace': 'welcome to amanda workspace'}  
+
+
 api.add_resource(Home, '/api/')
 api.add_resource(DemoGenerator, '/api/demo_gen/')
 api.add_resource(DemoDownload, '/static/<path:path>')
@@ -223,4 +242,5 @@ api.add_resource(FileInput, '/api/file-input/')
 api.add_resource(Ketcher, '/api/edit/')
 api.add_resource(Visualize, '/api/visualize')
 api.add_resource(TempFileHandler, '/api/getfile/<string:filename>')
+api.add_resource(Workspace, '/api/workspace')
 
