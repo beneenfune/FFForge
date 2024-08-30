@@ -8,6 +8,8 @@ import axios from "axios";
 const FileForm = () => {
   // Create file state
   const [structureFile, setStructureFile] = useState(null);
+  const [primaryPurpose, setPrimaryPurpose] = useState(""); // State for primary purpose dropdown
+  const [workflow, setWorkflow] = useState(""); // State for workflow dropdown
   const [filePath, setFilePath] = useState("");
   const [successMessage, setSuccessMessage] = useState(""); // State to store success message
 
@@ -17,11 +19,13 @@ const FileForm = () => {
     const url = process.env.NEXT_PUBLIC_BASE_URL + "/api/file-input";
     const formData = new FormData();
     formData.append("structureFile", structureFile);
+    formData.append("primaryPurpose", primaryPurpose);
+    formData.append("workflow", workflow);
 
-    // Log the formData entries
-    for (let pair of formData.entries()) {
-      console.log(pair[0] + ": " + pair[1]);
-    }
+    // // Log the formData entries
+    // for (let pair of formData.entries()) {
+    //   console.log(pair[0] + ": " + pair[1]);
+    // }
 
     const config = {
       headers: {
@@ -36,7 +40,6 @@ const FileForm = () => {
         // Handle success
         if (response.status >= 200 && response.status < 300) {
           const file_path = response.data.structure_path;
-          const message = response.data.message;
           setFilePath(file_path); // Set the file path in the state
           setSuccessMessage(response.data.message); // Set the success message in the state
           console.log("The file_path is " + filePath);
@@ -103,6 +106,43 @@ const FileForm = () => {
         required
       />
 
+      {/* Dropdown for primary purpose */}
+      <div>
+        <label className={styles.label}>
+          Which of the following is the primary purpose of the forcefield?
+        </label>
+        <select
+          value={primaryPurpose}
+          onChange={(e) => setPrimaryPurpose(e.target.value)}
+          required
+        >
+          <option value="">Select an option</option>
+          <option value="Simple Equilibration">Simple Equilibration</option>
+          <option value="DMA">DMA</option>
+          <option value="Anode depletion">Anode depletion</option>
+          <option value="Electrolyte chemical environment">
+            Electrolyte chemical environment
+          </option>
+          <option value="Adsorption analysis">Adsorption analysis</option>
+        </select>
+      </div>
+
+      {/* Dropdown for workflow */}
+      <div>
+        <label className={styles.label}>
+          Which workflow would you like to use?
+        </label>
+        <select
+          value={workflow}
+          onChange={(e) => setWorkflow(e.target.value)}
+          required
+        >
+          <option value="">Select an option</option>
+          <option value="Crystalline">Crystalline</option>
+          <option value="Amorphous">Amorphous</option>
+          <option value="Molecular">Molecular</option>
+        </select>
+      </div>
       {/* Submit button */}
       <div>
         <input type="submit" value="Submit" />

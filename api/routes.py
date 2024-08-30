@@ -3,7 +3,7 @@ from __init__ import api
 from flask import request, send_from_directory, url_for, jsonify, make_response
 from flask_restful import Resource, reqparse
 from utils.demo import mlff_trj_gen, remove_dir, zip_dir
-from utils.sfapi import upload_file,create_directory
+from utils.sfapi import upload_file, create_directory_on_login_node
 from utils.preprocessing import generate_hash
 
 import os
@@ -136,18 +136,21 @@ class FileInput(Resource):
                 original_filename = structure_file.filename
                 prefix = os.path.splitext(original_filename)[0]
                 extension = os.path.splitext(original_filename)[1]
-                # structure_file_path = os.path.join('static', original_filename)
-                # structure_file.save(structure_file_path)
                 
                 # Generate a unique directory name
-                directory_name = generate_hash()
+                hashed_directory_name = generate_hash()
 
                 # Create a directory in Perlmutter
                 root_dir = os.getenv("ROOT_DIR")
-                new_directory = asyncio.run(create_directory(root_dir, directory_name))
+                new_directory = create_directory_on_login_node("perlmutter", root_dir, directory_name=hashed_directory_name)
+                
+                if not new_directory:
+                    return {'error': "Failed to create directory on Perlmutter."}, 500
+                
+                print("New directory on Perlmutter: " + new_directory)
 
                 # Construct the new filename
-                new_filename = f"{prefix}_{directory_name}.{extension}"
+                new_filename = f"{prefix}_{hashed_directory_name}{extension}"
                 structure_file_path = os.path.join('static', new_filename)
                 
                 # Save the file with the new filename
@@ -156,7 +159,7 @@ class FileInput(Resource):
                 return {'error': f"Failed to save structure file: {str(e)}"}, 500
             
             print("The structure_file_path is " + structure_file_path)
-            full_path = url_for('static', filename=original_filename, _external=True)
+            full_path = url_for('static', filename=new_filename, _external=True)
 
             # Use sfapi to upload the file to the supercomputer
             try:

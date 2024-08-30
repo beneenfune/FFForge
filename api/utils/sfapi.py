@@ -2,6 +2,8 @@ from sfapi_client import AsyncClient
 from sfapi_client.compute import Machine
 from sfapi_client import Resource
 from authlib.jose import JsonWebKey
+from authlib.integrations.requests_client import OAuth2Session
+from authlib.oauth2.rfc7523 import PrivateKeyJWT
 from dotenv import load_dotenv
 from io import BytesIO
 from .preprocessing import generate_hash
@@ -9,6 +11,7 @@ import asyncio
 import json
 import os
 import sys
+import requests
 
 # Load environment variables from .env file
 load_dotenv()
@@ -16,7 +19,19 @@ load_dotenv()
 # Get the credentials from the environment
 client_id = os.getenv("SFAPI_CLIENT_ID")
 sfapi_secret = os.getenv("SFAPI_SECRET")
+private_key= os.getenv("SFAPI_PRIVATE_KEY")
 client_secret = JsonWebKey.import_key(json.loads(sfapi_secret))
+
+# Create authenticated session
+token_url = "https://oidc.nersc.gov/c2id/token"
+session = OAuth2Session(
+    client_id, 
+    private_key, 
+    PrivateKeyJWT(token_url),
+    grant_type="client_credentials",
+    token_endpoint=token_url
+)
+session.fetch_token()
 
 async def fetch_status():
     """Fetch and print the status of the Perlmutter machine."""
@@ -60,23 +75,35 @@ async def upload_file(file_path, target_directory):
             await target.upload(file_content)
             print(f"Uploaded {file_path} to {target_directory} on Perlmutter.")
 
-async def create_directory(root_directory, directory_name=generate_hash()):
-    """Create a directory in Perlmutter."""
-    async with AsyncClient(client_id, client_secret) as client:
-        perlmutter = await client.compute(Machine.perlmutter)
+def create_directory_on_login_node(system_name, root_directory, directory_name=generate_hash()):
+    """Create a directory in Perlmutter login node by running a command."""
+    
+    # Construct the new directory path
+    new_directory_path = f"{root_directory}/{directory_name}"
 
-        # Combine the root directory with the new directory name
-        new_directory = os.path.join(root_directory, directory_name)
+    # Construct the command to make the directory
+    cmd = f"mkdir -p {root_directory}/{directory_name}"
 
-        # Create the directory if it doesn't exist
-        try:
-            await perlmutter.mkdir(new_directory)
-            print(f"Directory {new_directory} created on Perlmutter.")
-        except Exception as e:
-            print(f"Failed to create directory {new_directory}: {str(e)}")
-            raise
+    # Define the API endpoint
+    api_endpoint = f"https://api.nersc.gov/api/v1.2/utilities/command/{system_name}"
 
-        return new_directory
+    # Send the POST request with the command
+    response = session.post(api_endpoint, data={"executable": cmd})
+
+    # Check if the request was successful
+    if response.status_code == 200:
+        response_data = response.json()
+        if response_data.get('status') == 'OK':
+            print(f"Directory {new_directory_path} created successfully.")
+            return new_directory_path
+        else:
+            print(f"Failed to create directory: {response_data.get('error')}")
+            return None
+    else:
+        print(f"HTTP request failed with status code: {response.status_code}")
+        return None
+
+
 if __name__ == "__main__":
     if len(sys.argv) != 3:
         print("Usage: python sfapi.py <file_path> <target_directory>")
