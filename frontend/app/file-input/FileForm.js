@@ -100,6 +100,9 @@ const FileForm = () => {
   return (
     <form className={styles.create} onSubmit={handleSubmit}>
       {/* Input button for structure file */}
+      <label className={styles.label}>
+        Upload Structure File <span style={{ color: "red" }}>*</span>
+      </label>
       <input
         type="file"
         onChange={(e) => setStructureFile(e.target.files[0])}
@@ -110,6 +113,7 @@ const FileForm = () => {
       <div>
         <label className={styles.label}>
           Which of the following is the primary purpose of the forcefield?
+          <span style={{ color: "red" }}>*</span>
         </label>
         <select
           value={primaryPurpose}
@@ -131,6 +135,7 @@ const FileForm = () => {
       <div>
         <label className={styles.label}>
           Which workflow would you like to use?
+          <span style={{ color: "red" }}>*</span>
         </label>
         <select
           value={workflow}

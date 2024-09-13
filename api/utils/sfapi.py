@@ -76,7 +76,7 @@ async def upload_file(file_path, target_directory):
             print(f"Uploaded {file_path} to {target_directory} on Perlmutter.")
 
 def create_directory_on_login_node(system_name, root_directory, directory_name=generate_hash()):
-    """Create a directory in Perlmutter login node by running a command."""
+    """Create a directory in Perlmutter login node by running a mkdir command."""
     
     # Construct the new directory path
     new_directory_path = f"{root_directory}/{directory_name}"
@@ -102,18 +102,3 @@ def create_directory_on_login_node(system_name, root_directory, directory_name=g
     else:
         print(f"HTTP request failed with status code: {response.status_code}")
         return None
-
-
-if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: python sfapi.py <file_path> <target_directory>")
-        sys.exit(1)
-
-    file_path = sys.argv[1]
-    target_directory = sys.argv[2]
-    
-    if not os.path.isfile(file_path):
-        print(f"The file {file_path} does not exist.")
-        sys.exit(1)
-    
-    asyncio.run(upload_file(file_path, target_directory))
