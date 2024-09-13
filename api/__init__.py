@@ -11,7 +11,7 @@ api = Api(app)
 load_dotenv()
 
 # Configure app to connect to databases
-app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
+# app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 app.config["MONGO_URI"] = os.getenv("MONGO_URI")
 
 # Setup MongoDB
@@ -20,7 +20,7 @@ db = mongodb_client.db
 
 # For CORS
 @app.after_request
-def after_request(response):
+def after_request(response):  
     response.headers.add('Access-Control-Allow-Origin', '*')
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')

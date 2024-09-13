@@ -2,7 +2,8 @@ blinker==1.8.2
 certifi==2024.7.4
 charset-normalizer==3.3.2
 click==8.1.7
-Flask_RESTful==0.3.10
+Flask==2.3.2
+Flask-RESTful==0.3.10
 idna==3.7
 itsdangerous==2.2.0
 Jinja2==3.1.4
