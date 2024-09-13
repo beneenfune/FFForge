@@ -16,22 +16,6 @@ const DemoForm = () => {
   const [slurmFile, setSlurmFile] = useState(null);
   const [zipPath, setZipPath] = useState("");
 
-<<<<<<< HEAD
-  // Use axios to handle multiple objects including files
-  function handleSubmit(event) {
-    event.preventDefault();
-
-    const url = process.env.NEXT_PUBLIC_BASE_URL + "/api/demo_gen";
-    const formData = new FormData();
-    formData.append("structname", structName);
-    formData.append("starttemp", startTemp);
-    formData.append("steptemp", stepTemp);
-    formData.append("endtemp", endTemp);
-    formData.append("infile", inFile);
-    formData.append("datafile", dataFile);
-    formData.append("slurmfile", slurmFile);
-
-=======
   // Use axios to handlie multiple objects including files
   function handleSubmit(event) {
     event.preventDefault();
@@ -45,16 +29,12 @@ const DemoForm = () => {
     formData.append("datafile", dataFile);
     formData.append("slurmfile", slurmFile);
 
->>>>>>> beneen-files-in-backend
     // Log the formData entries
     for (let pair of formData.entries()) {
       console.log(pair[0] + ": " + pair[1]);
     }
 
-<<<<<<< HEAD
-=======
     // https://www.filestack.com/fileschool/react/react-file-upload/
->>>>>>> beneen-files-in-backend
     const config = {
       headers: {
         "content-type": "multipart/form-data",

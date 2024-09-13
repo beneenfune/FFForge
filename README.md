@@ -16,7 +16,7 @@ TODO: Insert Project Summary here
 ```bash
 cd api
 py -3 -m venv .venv
-.venv\Scripts\activate
+. .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
@@ -28,6 +28,12 @@ python3 -m venv .venv
 . .venv/bin/activate  # or use .venv/Scripts/activate on some setups
 pip3 install -r requirements.txt
 ```
+
+
+```
+. .venv/Scripts/activate
+```
+
 
 ### Install Node.js Dependencies
 

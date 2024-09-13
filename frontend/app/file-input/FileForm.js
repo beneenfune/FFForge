@@ -8,7 +8,10 @@ import axios from "axios";
 const FileForm = () => {
   // Create file state
   const [structureFile, setStructureFile] = useState(null);
+  const [primaryPurpose, setPrimaryPurpose] = useState(""); // State for primary purpose dropdown
+  const [workflow, setWorkflow] = useState(""); // State for workflow dropdown
   const [filePath, setFilePath] = useState("");
+  const [successMessage, setSuccessMessage] = useState(""); // State to store success message
 
   // Use axios to handle multiple objects including files
   function handleSubmit(event) {
@@ -16,11 +19,13 @@ const FileForm = () => {
     const url = process.env.NEXT_PUBLIC_BASE_URL + "/api/file-input";
     const formData = new FormData();
     formData.append("structureFile", structureFile);
+    formData.append("primaryPurpose", primaryPurpose);
+    formData.append("workflow", workflow);
 
-    // Log the formData entries
-    for (let pair of formData.entries()) {
-      console.log(pair[0] + ": " + pair[1]);
-    }
+    // // Log the formData entries
+    // for (let pair of formData.entries()) {
+    //   console.log(pair[0] + ": " + pair[1]);
+    // }
 
     const config = {
       headers: {
@@ -36,6 +41,7 @@ const FileForm = () => {
         if (response.status >= 200 && response.status < 300) {
           const file_path = response.data.structure_path;
           setFilePath(file_path); // Set the file path in the state
+          setSuccessMessage(response.data.message); // Set the success message in the state
           console.log("The file_path is " + filePath);
         } else {
           // Handle error if status code is not in the range of 2xx
@@ -52,16 +58,31 @@ const FileForm = () => {
     axios({
       url: filePath, // Use the filePath from the state
       method: "GET",
-      responseType: "blob", // important
+      responseType: "blob", // Important
     })
       .then((response) => {
+        // Extract the file name from the file path
+        const contentDisposition = response.headers["content-disposition"];
+        let filename = "downloaded_file"; // Default filename
+
+        if (contentDisposition) {
+          const fileNameMatch = contentDisposition.match(/filename="?(.+)"?/);
+          if (fileNameMatch.length === 2) {
+            filename = fileNameMatch[1];
+          }
+        } else {
+          // Fallback to extracting filename from filePath if content-disposition header is missing
+          const filePathParts = filePath.split("/");
+          filename = filePathParts[filePathParts.length - 1];
+        }
+
         // create file link in browser's memory
         const href = URL.createObjectURL(response.data);
 
         // create "a" HTML element with href to file & click
         const link = document.createElement("a");
         link.href = href;
-        link.setAttribute("download", "structure_file.txt"); // replace with appropriate file extension
+        link.setAttribute("download", filename); // Set the download attribute to the original filename
         document.body.appendChild(link);
         link.click();
 
@@ -79,16 +100,65 @@ const FileForm = () => {
   return (
     <form className={styles.create} onSubmit={handleSubmit}>
       {/* Input button for structure file */}
+      <label className={styles.label}>
+        Upload Structure File <span style={{ color: "red" }}>*</span>
+      </label>
       <input
         type="file"
         onChange={(e) => setStructureFile(e.target.files[0])}
         required
       />
 
+      {/* Dropdown for primary purpose */}
+      <div>
+        <label className={styles.label}>
+          Which of the following is the primary purpose of the forcefield?
+          <span style={{ color: "red" }}>*</span>
+        </label>
+        <select
+          value={primaryPurpose}
+          onChange={(e) => setPrimaryPurpose(e.target.value)}
+          required
+        >
+          <option value="">Select an option</option>
+          <option value="Simple Equilibration">Simple Equilibration</option>
+          <option value="DMA">DMA</option>
+          <option value="Anode depletion">Anode depletion</option>
+          <option value="Electrolyte chemical environment">
+            Electrolyte chemical environment
+          </option>
+          <option value="Adsorption analysis">Adsorption analysis</option>
+        </select>
+      </div>
+
+      {/* Dropdown for workflow */}
+      <div>
+        <label className={styles.label}>
+          Which workflow would you like to use?
+          <span style={{ color: "red" }}>*</span>
+        </label>
+        <select
+          value={workflow}
+          onChange={(e) => setWorkflow(e.target.value)}
+          required
+        >
+          <option value="">Select an option</option>
+          <option value="Crystalline">Crystalline</option>
+          <option value="Amorphous">Amorphous</option>
+          <option value="Molecular">Molecular</option>
+        </select>
+      </div>
       {/* Submit button */}
       <div>
         <input type="submit" value="Submit" />
       </div>
+
+      {/* Display success message if available */}
+      {successMessage && (
+        <div>
+          <p className={styles.successMessage}>{successMessage}</p>
+        </div>
+      )}
 
       {/* Download button, shown only when filePath is available */}
       {filePath && (
