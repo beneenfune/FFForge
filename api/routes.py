@@ -141,11 +141,17 @@ class FileInput(Resource):
                 hashed_directory_name = generate_hash()
 
                 # Create a directory in Perlmutter
-                root_dir = os.getenv("ROOT_DIR")
-                new_directory = create_directory_on_login_node("perlmutter", root_dir, directory_name=hashed_directory_name)
-                
-                if not new_directory:
-                    return {'error': "Failed to create directory on Perlmutter."}, 500
+                try:
+                    root_dir = os.getenv("ROOT_DIR")
+                    if not root_dir:
+                        raise EnvironmentError("ROOT_DIR environment variable not set.")
+                    
+                    new_directory = create_directory_on_login_node("perlmutter", root_dir, directory_name=hashed_directory_name)
+                    if not new_directory:
+                        return {'error': "Failed to create directory on Perlmutter. Please check configuration and try again."}, 500
+
+                except Exception as e:
+                    return {'error': f"Failed to create directory on Perlmutter: {str(e)}"}, 500
                 
                 print("New directory on Perlmutter: " + new_directory)
 
