@@ -40,6 +40,16 @@ npm install
 
 ## Running the Application
 
+### Note: Security Clearance Level
+
+- .env in `api` directory needs to have Red clearance with the following example values:
+
+```
+SFAPI_CLIENT_ID='randmstrgz'
+SFAPI_SECRET='{"kty": "RSA", "n": ...}'
+SFAPI_PRIVATE_KEY="PEM Long string"
+```
+
 - Run the `run.py` file when in the `api` directory
 
 ```
