@@ -5,4 +5,4 @@ static/
 
 # nersc
 .superfacility/
-./fireworks
+**/fireworks
