@@ -150,7 +150,7 @@ const FileForm = () => {
       </div>
       {/* Submit button */}
       <div>
-        <input type="submit" value="Submit" />
+        <input type="submit" value="Submit" className={styles.button}/>
       </div>
 
       {/* Display success message if available */}
@@ -163,7 +163,7 @@ const FileForm = () => {
       {/* Download button, shown only when filePath is available */}
       {filePath && (
         <div>
-          <button type="button" onClick={handleDownload}>
+          <button type="button" className={styles.button} onClick={handleDownload}>
             Download File
           </button>
         </div>
