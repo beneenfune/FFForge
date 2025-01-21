@@ -2,4 +2,7 @@
 .env
 __pycache__
 static/
+
+# nersc
 .superfacility/
+./fireworks
