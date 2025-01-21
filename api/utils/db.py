@@ -13,9 +13,9 @@ if not MONGO_URI:
 # Set up MongoDB client
 try:
     client = MongoClient(MONGO_URI)
-    db = client['ffforge_db']  # Replace with your database name
+    db = client['ffforge_db'] 
 except Exception as e:
     raise ConnectionError(f"Failed to connect to MongoDB: {str(e)}")
 
 # Collections
-ffforge_collection = db['ffforge_collection']  # Replace with your collection name
+ffforge_collection = db['ffforge_collection']  
