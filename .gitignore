@@ -1,7 +1,9 @@
+# local
 .venv
 .env
 __pycache__
 static/
+.vscode
 
 # nersc
 .superfacility/
