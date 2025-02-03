@@ -41,6 +41,19 @@ async def fetch_status():
         print(status)
         print()
 
+async def get_status():
+    """Get the status of the Perlmutter machine."""
+    async with AsyncClient(client_id, client_secret) as client:
+        perlmutter = await client.compute(Machine.perlmutter)
+        print("Perlmutter Status:")
+        print(perlmutter)
+        return {
+            "machine_name" : perlmutter.full_name,
+            "description": perlmutter.description,
+            "status": perlmutter.status,
+            "system_type": perlmutter.system_type
+        }
+
 async def fetch_outages():
     """Fetch and print the most recent outages for the Spin resource."""
     async with AsyncClient() as client:

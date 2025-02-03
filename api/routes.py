@@ -3,7 +3,7 @@ from __init__ import api
 from flask import request, send_from_directory, url_for, jsonify, make_response
 from flask_restful import Resource, reqparse
 from utils.demo import mlff_trj_gen, remove_dir, zip_dir
-from utils.sfapi import upload_file, create_directory_on_login_node
+from utils.sfapi import upload_file, create_directory_on_login_node, get_status
 from utils.preprocessing import generate_hash
 
 import os
@@ -232,9 +232,10 @@ class Visualize(Resource):
 
         return {'output': output}
 
-class Test_DB(Resource):
-    def post(self):
-        return 1
+class Test_SFAPI_Connection(Resource):
+    def get(self):
+        status_data = asyncio.run(get_status())
+        return status_data
 
 # Route for Workspace Page
 class Workspace(Resource):
@@ -252,4 +253,4 @@ api.add_resource(Ketcher, '/api/edit/')
 api.add_resource(Visualize, '/api/visualize')
 api.add_resource(TempFileHandler, '/api/getfile/<string:filename>')
 api.add_resource(Workspace, '/api/workspace')
-
+api.add_resource(Test_SFAPI_Connection, '/api/sfapi/connect')
