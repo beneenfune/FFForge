@@ -37,16 +37,15 @@ async def fetch_status():
     """Fetch and print the status of the Perlmutter machine."""
     async with AsyncClient() as client:
         status = await client.compute(Machine.perlmutter)
-        print("Perlmutter Status:")
+        print("Checking Perlmutter Status:")
         print(status)
         print()
 
 async def get_status():
-    """Get the status of the Perlmutter machine."""
+    """Get the status of the Perlmutter machine using credentials."""
     async with AsyncClient(client_id, client_secret) as client:
         perlmutter = await client.compute(Machine.perlmutter)
-        print("Perlmutter Status:")
-        print(perlmutter)
+        print(f"Checking Perlmutter Connection: {perlmutter.description}")
         return {
             "machine_name" : perlmutter.full_name,
             "description": perlmutter.description,
@@ -106,7 +105,19 @@ def create_directory_on_login_node(system_name, root_directory, directory_name=g
     # Check if the request was successful
     if response.status_code == 200:
         response_data = response.json()
+        print(response_data)
         if response_data.get('status') == 'OK':
+
+            # Print response from GET tasks
+            task_id = response_data.get('task_id')
+            task_endpoint = f"https://api.nersc.gov/api/v1.2/tasks/{task_id}"
+                
+            # Send the GET request with the command
+            r = session.get(task_endpoint)
+
+            r_data = r.json()
+            print(r_data)
+            
             print(f"Directory {new_directory_path} created successfully.")
             return new_directory_path
         else:
@@ -115,3 +126,88 @@ def create_directory_on_login_node(system_name, root_directory, directory_name=g
     else:
         print(f"HTTP request failed with status code: {response.status_code}")
         return None
+
+def cat_file(file_dir, file_name):
+    """Cat the file in Perlmutter login node by running a cat command."""
+    
+    # Construct the command to cat the file
+    cmd = f'cat {file_dir}/{file_name}'
+
+    # Define the API endpoint
+    command_endpoint = "https://api.nersc.gov/api/v1.2/utilities/command/perlmutter"
+
+    # Send the POST request with the cat command
+    cat_response = session.post(command_endpoint, data={"executable": cmd})
+
+    # Check if the request was successful
+    if cat_response.status_code == 200:
+        cat_response_data = cat_response.json()
+        if cat_response_data.get('status') == 'OK':
+
+            # Print POST response
+            print(f"Response from POST: {cat_response_data}")
+
+            # Send the GET request with the task command
+            task_id = cat_response_data.get('task_id')
+            task_endpoint = f"https://api.nersc.gov/api/v1.2/tasks/{task_id}"
+            task_response = session.get(task_endpoint)
+
+            # Print GET response
+            task_response_data = task_response.json()
+            print(f"Response from GET: {task_response_data}")
+
+            return task_response_data
+        else:
+            print(f"Failed to cat file: {cat_response.get('error')}")
+            return None
+    else:
+        print(f"HTTP request failed with status code: {cat_response.status_code}")
+        return None
+
+def get_task(task_id):
+    """Fetches task details from SFAPI based on the given task_id."""
+    task_endpoint = f"https://api.nersc.gov/api/v1.2/tasks/{task_id}"
+                
+    # Send the GET request
+    task_response = session.get(task_endpoint)
+
+    if task_response.status_code == 200:
+        task_data = task_response.json()
+        if task_data.get('status') == 'completed':
+            print(task_data)
+            return task_data
+
+    else:
+        print(f"[ERROR] HTTP request failed with status code: {task_response.status_code}")
+        return {"error": f"Request failed with status code {task_response.status_code}"}
+
+def get_all_lpad_wflows():
+    """Get the launchpad's workflows in Perlmutter login node by runnng command from SFAPI."""
+
+    # Construct the command to activate the environment and get the workflows
+    wflows_cmd = 'conda activate atomate2 && lpad get_wflows'
+
+    # Define the API endpoint
+    command_endpoint = "https://api.nersc.gov/api/v1.2/utilities/command/perlmutter"
+
+    # Send the POST request with the command
+    wflows_response = session.post(command_endpoint, data={"executable": wflows_cmd})
+
+    # Check if the request was successful
+    if wflows_response.status_code == 200:
+        response_data = wflows_response.json()
+        if response_data.get('status') == 'OK':
+            return response_data # Return successful response
+
+        else:
+            error_message = response_data.get('error', 'Unknown error occurred')
+            print(f"[ERROR] Failed to get lpad wflows: {error_message}")
+            return {"error": error_message}  # JSON error response for Postman
+    
+    elif wflows_response.status_code == 403:
+        print("[ERROR] Authentication failed: SFAPI token has likely expired.")
+        return {"error": "Authentication failed. Your SFAPI token may have expired. Please reauthenticate."}
+
+    else:
+        print(f"[ERROR] HTTP request failed with status code: {wflows_response.status_code}")
+        return {"error": f"Request failed with status code {wflows_response.status_code}"}

@@ -3,15 +3,18 @@ from __init__ import api
 from flask import request, send_from_directory, url_for, jsonify, make_response
 from flask_restful import Resource, reqparse
 from utils.demo import mlff_trj_gen, remove_dir, zip_dir
-from utils.sfapi import upload_file, create_directory_on_login_node, get_status
+from utils.sfapi import upload_file, create_directory_on_login_node, get_status, cat_file, get_task, get_all_lpad_wflows
 from utils.preprocessing import generate_hash
 
 import os
 import subprocess
-# import requests
 import asyncio
 import numpy as np
+import json
+from dotenv import load_dotenv
 
+# Load environment variables from .env file
+load_dotenv()
 
 # Route for Home page
 class Home(Resource):
@@ -232,15 +235,63 @@ class Visualize(Resource):
 
         return {'output': output}
 
+# Route for Workspace Page
+class Workspace(Resource):
+    def get(self):
+        return {'workspace': 'welcome to a random workspace'}
+
 class Test_SFAPI_Connection(Resource):
+
+    # Get NERSC status: for testing connection to NERSC purposes
     def get(self):
         status_data = asyncio.run(get_status())
         return status_data
 
-# Route for Workspace Page
-class Workspace(Resource):
-    def get(self):
-        return {'workspace': 'welcome to amanda workspace'}  
+    # Cat a file in NERSC: for testing Run Command ability purposes
+    def post(self):
+        root_dir = os.getenv("ROOT_DIR")
+        file_name = "run_command_file.txt"
+        cat_result = cat_file(root_dir, file_name)
+        return cat_result
+
+class Test_SFAPI_Get_Task(Resource):
+    """API Resource to fetch task outputs."""
+
+    # Get Task based on task id: for getting outputs of Run Commands purposes
+    def get(self, task_id):
+        result = get_task(task_id)
+
+        try:
+            # Ensure 'result' is parsed correctly
+            parsed_result = json.loads(result["result"]) if isinstance(result["result"], str) else result["result"]
+
+            # Ensure 'output' is correctly processed
+            if "output" in parsed_result:
+                if isinstance(parsed_result["output"], str):
+                    try:
+                        # Attempt to parse output as JSON (if it's a JSON string)
+                        parsed_result["output"] = json.loads(parsed_result["output"])
+                    except json.JSONDecodeError:
+                        # If JSON parsing fails, keep output as a string
+                        pass
+
+            # Ensure `output` is in the expected format (string or list)
+            if not isinstance(parsed_result["output"], (str, list)):
+                return {"error": "Unexpected output format"}
+
+            return parsed_result["output"]  # Return parsed output
+
+        except json.JSONDecodeError as e:
+            return {"error": f"JSON decode error: {str(e)}"}
+
+        return result["result"]
+
+
+class Test_SFAPI_Post_Wflows(Resource):
+    # Get launchpad workflows: to
+    def post(self):
+        return get_all_lpad_wflows()
+  
 
 
 api.add_resource(Home, '/api/')
@@ -253,4 +304,7 @@ api.add_resource(Ketcher, '/api/edit/')
 api.add_resource(Visualize, '/api/visualize')
 api.add_resource(TempFileHandler, '/api/getfile/<string:filename>')
 api.add_resource(Workspace, '/api/workspace')
-api.add_resource(Test_SFAPI_Connection, '/api/sfapi/connect')
+api.add_resource(Test_SFAPI_Connection, '/api/v1/sfapi/connect')
+api.add_resource(Test_SFAPI_Get_Task, '/api/v1/sfapi/get/task/<int:task_id>')
+api.add_resource(Test_SFAPI_Post_Wflows, '/api/v1/sfapi/post/wflows')
+
