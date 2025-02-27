@@ -17,17 +17,20 @@ export default function TextInput() {
     
     // Fetch data from the API
     useEffect(() => {
-        const fetchTextInput = async () => {
-            const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL +'/api/text-input')
-            const data = await response.json()
+      console.log("Base URL:", process.env.NEXT_PUBLIC_BASE_URL); // Debugging
+      const fetchTextInput = async () => {
+        const response = await fetch(
+          process.env.NEXT_PUBLIC_BASE_URL + "/api/text-input"
+        );
+        const data = await response.json();
 
-            if ( response.ok ){
-                setMessage(data.text);
-                setLoading(false);
-                console.log("Text Inputter Visiualized")
-            }
+        if (response.ok) {
+          setMessage(data.text);
+          setLoading(false);
+          console.log("Text Inputter Visiualized");
         }
-        fetchTextInput()
+      };
+      fetchTextInput();
     }, []);
 
         

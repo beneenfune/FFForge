@@ -1,0 +1,53 @@
+services:
+  api:
+    build: ./api
+    env_file:
+      - ./api/.env  
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/app
+    depends_on:
+      - mongodb
+    networks:
+      - ffforge-network
+    environment:
+      - FLASK_ENV=development
+
+  frontend:
+    build: ./frontend
+    env_file:
+      - ./api/.env  
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend/:app
+      - /app/node_modules
+    depends_on:
+      - api
+    environment:
+      - NEXT_PUBLIC_BASE_URL=$${NEXT_PUBLIC_BASE_URL}  
+    networks:
+      - ffforge-network
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    env_file:
+      - ./api/.env
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=$${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=$${MONGO_INITDB_ROOT_PASSWORD}
+    networks:
+      - ffforge-network
+networks:
+  ffforge-network:
+
+
+
+
+
+

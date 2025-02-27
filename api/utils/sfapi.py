@@ -177,6 +177,11 @@ def get_task(task_id):
             print(task_data)
             return task_data
 
+    elif wflows_response.status_code == 403:
+        print("[ERROR] Authentication failed: SFAPI token has likely expired.")
+        return {"error": "Authentication failed. Your SFAPI token may have expired. Please reauthenticate."}
+
+
     else:
         print(f"[ERROR] HTTP request failed with status code: {task_response.status_code}")
         return {"error": f"Request failed with status code {task_response.status_code}"}

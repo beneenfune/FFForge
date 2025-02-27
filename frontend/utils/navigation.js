@@ -26,10 +26,10 @@ export const useNavigation = () => {
 
 
     return {
-        navigateToTextInput,
-        navigateToFileInput,
-        navigateToKetcher,
-        navigateToLanding,
-        navigateToVisualize
+      navigateToTextInput,
+      navigateToFileInput,
+      navigateToKetcher, 
+      navigateToLanding,
+      navigateToVisualize,
     };
 };
