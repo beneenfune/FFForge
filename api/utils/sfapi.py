@@ -10,8 +10,8 @@ from .preprocessing import generate_hash
 import asyncio
 import json
 import os
-import sys
-import requests
+# import sys
+# import requests
 
 # Load environment variables from .env file
 load_dotenv()

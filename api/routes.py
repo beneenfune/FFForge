@@ -5,7 +5,10 @@ from flask_restful import Resource, reqparse
 from utils.demo import mlff_trj_gen, remove_dir, zip_dir
 from utils.sfapi import upload_file, create_directory_on_login_node, get_status, cat_file, get_task, get_all_lpad_wflows
 from utils.preprocessing import generate_hash
+from utils.db import ffforge_collection, users_collection, workflows_collection  
+from models.workflowModel import create_workflow_entry  # Import model function
 
+from bson.objectid import ObjectId
 import os
 import subprocess
 import asyncio
@@ -287,14 +290,52 @@ class Test_SFAPI_Get_Task(Resource):
 
         return result["result"]
 
-
 class Test_SFAPI_Post_Wflows(Resource):
     # Get launchpad workflows: to
     def post(self):
         return get_all_lpad_wflows()
-  
+    
+class WorkflowSubmission(Resource):
+    def post(self):
+        try:
+            # Get form data
+            data = {
+                "prefix": request.form.get('prefix'),
+                "max_structures": int(request.form.get('max_structures')),
+                "purpose": request.form.get('purpose'),
+                "structure_type": request.form.get('structure_type'),
+                "use_active_learning": request.form.get('use_active_learning')
+            }
 
+            # Create workflow entry
+            workflow_entry = create_workflow_entry(data)
 
+            # Insert into MongoDB
+            inserted_id = workflows_collection.insert_one(workflow_entry).inserted_id
+
+            return {
+                "message": "Workflow submitted successfully!",
+                "workflow_id": str(inserted_id),
+                "status": "submitted"
+            }, 201  # HTTP 201 Created
+
+        except Exception as e:
+            return {"error": str(e)}, 400  # HTTP 400 Bad Request
+
+class WorkflowDeletion(Resource):
+    def delete(self, workflow_id):
+        try:
+            result = workflows_collection.delete_one({"_id": ObjectId(workflow_id)})
+            
+            if result.deleted_count == 0:
+                return {"message": "Workflow not found"}, 404  # Not Found
+            
+            return {"message": "Workflow deleted successfully"}, 200  # Success
+
+        except Exception as e:
+            return {"error": str(e)}, 400  # Bad Request
+
+# V0
 api.add_resource(Home, '/api/')
 api.add_resource(DemoGenerator, '/api/demo_gen/')
 api.add_resource(DemoDownload, '/static/<path:path>')
@@ -305,7 +346,11 @@ api.add_resource(Ketcher, '/api/edit/')
 api.add_resource(Visualize, '/api/visualize')
 api.add_resource(TempFileHandler, '/api/getfile/<string:filename>')
 api.add_resource(Workspace, '/api/workspace')
+
+# V1
 api.add_resource(Test_SFAPI_Connection, '/api/v1/sfapi/connect')
 api.add_resource(Test_SFAPI_Get_Task, '/api/v1/sfapi/get/task/<int:task_id>')
 api.add_resource(Test_SFAPI_Post_Wflows, '/api/v1/sfapi/post/wflows')
+api.add_resource(WorkflowSubmission, '/api/v1/workflow/submit')
+api.add_resource(WorkflowDeletion, "/api/v1/workflow/delete/<string:workflow_id>")
 

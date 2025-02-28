@@ -20,4 +20,6 @@ except Exception as e:
     raise ConnectionError(f"Failed to connect to MongoDB: {str(e)}")
 
 # Collections
-ffforge_collection = db['ffforge_collection']  
+ffforge_collection = db['ffforge_collection']
+users_collection = db['users']
+workflows_collection = db['workflows']  
