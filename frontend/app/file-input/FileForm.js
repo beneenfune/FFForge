@@ -22,10 +22,6 @@ const FileForm = () => {
     formData.append("primaryPurpose", primaryPurpose);
     formData.append("workflow", workflow);
 
-    // // Log the formData entries
-    // for (let pair of formData.entries()) {
-    //   console.log(pair[0] + ": " + pair[1]);
-    // }
 
     const config = {
       headers: {
