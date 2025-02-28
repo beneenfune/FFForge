@@ -147,16 +147,16 @@ def cat_file(file_dir, file_name):
             # Print POST response
             print(f"Response from POST: {cat_response_data}")
 
-            # Send the GET request with the task command
-            task_id = cat_response_data.get('task_id')
-            task_endpoint = f"https://api.nersc.gov/api/v1.2/tasks/{task_id}"
-            task_response = session.get(task_endpoint)
+            # # Send the GET request with the task command
+            # task_id = cat_response_data.get('task_id')
+            # task_endpoint = f"https://api.nersc.gov/api/v1.2/tasks/{task_id}"
+            # task_response = session.get(task_endpoint)
 
-            # Print GET response
-            task_response_data = task_response.json()
-            print(f"Response from GET: {task_response_data}")
+            # # Print GET response
+            # task_response_data = task_response.json()
+            # print(f"Response from GET: {task_response_data}")
 
-            return task_response_data
+            return cat_response_data
         else:
             print(f"Failed to cat file: {cat_response.get('error')}")
             return None

@@ -6,7 +6,9 @@ import os
 load_dotenv()
 
 # Validate and Get Mongo URI
-MONGO_URI = os.getenv("LOCAL_MONGO_URI")
+MONGO_URI = os.getenv("REMOTE_MONGO_URI")
+# MONGO_URI = os.getenv("LOCAL_MONGO_URI")
+
 if not MONGO_URI:
     raise EnvironmentError("MONGO_URI environment variable must be set in the .env file.")
 

@@ -251,8 +251,9 @@ class Test_SFAPI_Connection(Resource):
     def post(self):
         root_dir = os.getenv("ROOT_DIR")
         file_name = "run_command_file.txt"
-        cat_result = cat_file(root_dir, file_name)
-        return cat_result
+        cat_results = cat_file(root_dir, file_name)
+        cat_results["next_step"] = "please run task_id in 'Get Task from ID endpoint' to confirm cat"
+        return { "cat_result": cat_results }
 
 class Test_SFAPI_Get_Task(Resource):
     """API Resource to fetch task outputs."""
