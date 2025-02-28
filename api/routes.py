@@ -15,6 +15,7 @@ import asyncio
 import numpy as np
 import json
 from dotenv import load_dotenv
+import time
 
 # Load environment variables from .env file
 load_dotenv()
@@ -309,73 +310,84 @@ class WorkflowSubmission(Resource):
 
             # Create workflow entry
             workflow_entry = create_workflow_entry(data)
-
-            # Insert into MongoDB
             workflow_id = workflows_collection.insert_one(workflow_entry).inserted_id
-            
+
             # Ensure a file is uploaded
             if 'structure_file' not in request.files or request.files['structure_file'].filename == '':
                 return {'error': 'A structure file is required for this workflow submission.'}, 400
-            
-            # Upload file to NERSC in the workflow_id as a hash
             structure_file = request.files.get('structure_file')
-            
-            # Save file to the new file in the static directory
+
+            # Create 'static' directory if it doesn't exist
             if not os.path.exists('static'):
                 os.makedirs('static')
                 
+            original_filename = structure_file.filename
+            prefix = os.path.splitext(original_filename)[0]
+            extension = os.path.splitext(original_filename)[1]
+
+            # Use workflow_id as name of directory to put file in
+            workflow_dir_name = str(workflow_id)
+
+            # Create a directory in Perlmutter
+            root_dir = os.getenv("ROOT_DIR")
+            if not root_dir:
+                raise EnvironmentError("ROOT_DIR environment variable not set.")
+            
+            new_directory = create_directory_on_login_node("perlmutter", root_dir + "/workflows", workflow_dir_name)            
+            if not new_directory:
+                return {'error': "Failed to create directory on Perlmutter."}, 500
+
+            # Construct the new structure file name
+            new_filename = f"{prefix}_{workflow_id}{extension}"
+            structure_file_path = os.path.join('static', new_filename)
+            structure_file.save(structure_file_path) # Save the structure file locally
+
+            # Create JSON file containing workflow specifications
             try:
-                original_filename = structure_file.filename
-                prefix = os.path.splitext(original_filename)[0]
-                extension = os.path.splitext(original_filename)[1]
-                
-                # Use workflow_id as name of directory to put file in
-                workflow_dir_name = str(workflow_id) 
-                
-                # Create a directory in Perlmutter
-                try:
-                    root_dir = os.getenv("ROOT_DIR")
-                    if not root_dir:
-                        raise EnvironmentError("ROOT_DIR environment variable not set.")
-                    
-                    workflow_dir = root_dir + "/workflows" 
-                    new_directory = create_directory_on_login_node("perlmutter", workflow_dir, directory_name=workflow_dir_name)
-                    if not new_directory:
-                        return {'error': "Failed to create directory on Perlmutter. Please check configuration and try again."}, 500
+                json_filename = f"wf_specifications_{prefix}_{workflow_id}.json"
+                json_file_path = os.path.join('static', json_filename)
 
-                except Exception as e:
-                    return {'error': f"Failed to create directory on Perlmutter: {str(e)}"}, 500
-                
-                print("New directory on Perlmutter: " + new_directory)
+                wf_specification = {
+                    "workflow_id": str(workflow_id),
+                    "prefix": data["prefix"],
+                    "max_structures": data["max_structures"],
+                    "purpose": data["purpose"],
+                    "structure_type": data["structure_type"],
+                    "use_active_learning": data["use_active_learning"],
+                    "structure_filename": new_filename  # Store reference to the structure file
+                }
 
-                # Construct the new filename
-                new_filename = f"{prefix}_{workflow_id}{extension}"
-                structure_file_path = os.path.join('static', new_filename)
-                
-                # Save the file with the new filename
-                structure_file.save(structure_file_path)
-                
+                # Write JSON data to file
+                with open(json_file_path, 'w') as json_file:
+                    json.dump(wf_specification, json_file, indent=4)
+
             except Exception as e:
-                    return {'error': f"Failed to save structure file: {str(e)}"}, 500
-                
-            # Use sfapi to upload the file to the supercomputer
+                return {'error': f"Failed to create workflow specification JSON: {str(e)}"}, 500
+
+            # Upload files to Perlmutter
             try:
-                asyncio.run(upload_file(structure_file_path, new_directory))  # Pass the file path, not file object
-                
-                # If upload succeeds, delete the local file
+                asyncio.run(upload_file(structure_file_path, new_directory)) # Upload structure file
+                asyncio.run(upload_file(json_file_path, new_directory)) # Upload workflow specification file
+
                 os.remove(structure_file_path)
-                
+                os.remove(json_file_path)
+
             except Exception as e:
-                return {'error': f"Failed to upload file to Perlmutter: {str(e)}"}, 500
+                if os.path.exists(structure_file_path):
+                    os.remove(structure_file_path)
+                if os.path.exists(json_file_path):
+                    os.remove(json_file_path)
+                return {'error': f"Failed to upload files to Perlmutter: {str(e)}"}, 500
 
             return {
-                "message": "Workflow submitted and structure file uploaded successfully!",
+                "message": "Workflow submitted and files uploaded successfully!",
                 "workflow_id": str(workflow_id),
                 "status": "submitted"
             }, 201  # HTTP 201 Created
 
         except Exception as e:
             return {"error": str(e)}, 400  # HTTP 400 Bad Request
+
 
 class WorkflowDeletion(Resource):
     def delete(self, workflow_id):

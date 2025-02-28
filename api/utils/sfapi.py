@@ -10,8 +10,8 @@ from .preprocessing import generate_hash
 import asyncio
 import json
 import os
-# import sys
-# import requests
+import time
+
 
 # Load environment variables from .env file
 load_dotenv()
@@ -105,7 +105,6 @@ def create_directory_on_login_node(system_name, root_directory, directory_name=g
     # Check if the request was successful
     if response.status_code == 200:
         response_data = response.json()
-        print(response_data)
         if response_data.get('status') == 'OK':
 
             # Print response from GET tasks
@@ -114,10 +113,8 @@ def create_directory_on_login_node(system_name, root_directory, directory_name=g
                 
             # Send the GET request with the command
             r = session.get(task_endpoint)
+            time.sleep(1) # Perlmutter needs a second to make the directory else this endpoint will throw 500 without a buffer 
 
-            r_data = r.json()
-            print(r_data)
-            
             print(f"Directory {new_directory_path} created successfully.")
             return new_directory_path
         else:
