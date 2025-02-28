@@ -3,7 +3,7 @@ from __init__ import api
 from flask import request, send_from_directory, url_for, jsonify, make_response
 from flask_restful import Resource, reqparse
 from utils.demo import mlff_trj_gen, remove_dir, zip_dir
-from utils.sfapi import upload_file, create_directory_on_login_node, get_status, cat_file, get_task, get_all_lpad_wflows
+from utils.sfapi import upload_file, create_directory_on_login_node, get_status, cat_file, get_task, get_all_lpad_wflows, remove_file, recursively_rm_dir
 from utils.preprocessing import generate_hash
 from utils.db import ffforge_collection, users_collection, workflows_collection  
 from models.workflowModel import create_workflow_entry  # Import model function
@@ -148,7 +148,7 @@ class FileInput(Resource):
 
                 # Create a directory in Perlmutter
                 try:
-                    root_dir = os.getenv("ROOT_DIR")
+                    root_dir = os.getenv("ROOT_DIR") + "/sf_api_implementing"
                     if not root_dir:
                         raise EnvironmentError("ROOT_DIR environment variable not set.")
                     
@@ -252,7 +252,7 @@ class Test_SFAPI_Connection(Resource):
 
     # Cat a file in NERSC: for testing Run Command ability purposes
     def post(self):
-        root_dir = os.getenv("ROOT_DIR")
+        root_dir = os.getenv("ROOT_DIR") + "/sf_api_implementing"
         file_name = "run_command_file.txt"
         cat_results = cat_file(root_dir, file_name)
         cat_results["next_step"] = "please run task_id in 'Get Task from ID endpoint' to confirm cat"
@@ -311,11 +311,66 @@ class WorkflowSubmission(Resource):
             workflow_entry = create_workflow_entry(data)
 
             # Insert into MongoDB
-            inserted_id = workflows_collection.insert_one(workflow_entry).inserted_id
+            workflow_id = workflows_collection.insert_one(workflow_entry).inserted_id
+            
+            # Ensure a file is uploaded
+            if 'structure_file' not in request.files or request.files['structure_file'].filename == '':
+                return {'error': 'A structure file is required for this workflow submission.'}, 400
+            
+            # Upload file to NERSC in the workflow_id as a hash
+            structure_file = request.files.get('structure_file')
+            
+            # Save file to the new file in the static directory
+            if not os.path.exists('static'):
+                os.makedirs('static')
+                
+            try:
+                original_filename = structure_file.filename
+                prefix = os.path.splitext(original_filename)[0]
+                extension = os.path.splitext(original_filename)[1]
+                
+                # Use workflow_id as name of directory to put file in
+                workflow_dir_name = str(workflow_id) 
+                
+                # Create a directory in Perlmutter
+                try:
+                    root_dir = os.getenv("ROOT_DIR")
+                    if not root_dir:
+                        raise EnvironmentError("ROOT_DIR environment variable not set.")
+                    
+                    workflow_dir = root_dir + "/workflows" 
+                    new_directory = create_directory_on_login_node("perlmutter", workflow_dir, directory_name=workflow_dir_name)
+                    if not new_directory:
+                        return {'error': "Failed to create directory on Perlmutter. Please check configuration and try again."}, 500
+
+                except Exception as e:
+                    return {'error': f"Failed to create directory on Perlmutter: {str(e)}"}, 500
+                
+                print("New directory on Perlmutter: " + new_directory)
+
+                # Construct the new filename
+                new_filename = f"{prefix}_{workflow_id}{extension}"
+                structure_file_path = os.path.join('static', new_filename)
+                
+                # Save the file with the new filename
+                structure_file.save(structure_file_path)
+                
+            except Exception as e:
+                    return {'error': f"Failed to save structure file: {str(e)}"}, 500
+                
+            # Use sfapi to upload the file to the supercomputer
+            try:
+                asyncio.run(upload_file(structure_file_path, new_directory))  # Pass the file path, not file object
+                
+                # If upload succeeds, delete the local file
+                os.remove(structure_file_path)
+                
+            except Exception as e:
+                return {'error': f"Failed to upload file to Perlmutter: {str(e)}"}, 500
 
             return {
-                "message": "Workflow submitted successfully!",
-                "workflow_id": str(inserted_id),
+                "message": "Workflow submitted and structure file uploaded successfully!",
+                "workflow_id": str(workflow_id),
                 "status": "submitted"
             }, 201  # HTTP 201 Created
 
@@ -325,15 +380,45 @@ class WorkflowSubmission(Resource):
 class WorkflowDeletion(Resource):
     def delete(self, workflow_id):
         try:
+            # Attempt to delete the workflow entry from MongoDB
             result = workflows_collection.delete_one({"_id": ObjectId(workflow_id)})
             
+            # If no document was deleted, return a 404 response indicating workflow not found
             if result.deleted_count == 0:
                 return {"message": "Workflow not found"}, 404  # Not Found
             
-            return {"message": "Workflow deleted successfully"}, 200  # Success
+            try: 
+                # Retrieve the root directory path from environment variables
+                root_dir = os.getenv("ROOT_DIR")
+                if not root_dir:
+                    raise EnvironmentError("ROOT_DIR environment variable not set.")
+                
+                # Construct the full path of the workflow directory on Perlmutter
+                workflow_dir = root_dir + "/workflows/"+ workflow_id
+                
+                # Attempt to remove the workflow directory from Perlmutter
+                rm_dir = recursively_rm_dir(workflow_dir)
+                if not rm_dir:
+                    return {'error': "Failed to remove workflow directory on Perlmutter. Please check configuration and try again."}, 500
+            except Exception as e:
+                return {'error': f"Failed to upload file to Perlmutter: {str(e)}"}, 500
+            
+            return {"message": "Workflow deleted from database and Perlmutter successfully"}, 200  # Success
 
         except Exception as e:
             return {"error": str(e)}, 400  # Bad Request
+        
+class Test_Remove_File(Resource):
+    # Remove a file in NERSC
+    def post(self):
+        
+        sub_dir = request.form.get('sub_dir')
+        file_name = request.form.get('file_name')
+        root_dir = os.getenv("ROOT_DIR")
+        target_dir = root_dir + sub_dir
+        rm_results = remove_file(target_dir, file_name)
+        rm_results["next_step"] = "please run task_id in 'Get Task from ID endpoint' to confirm rm"
+        return { "rm_results": rm_results }
 
 # V0
 api.add_resource(Home, '/api/')
@@ -351,6 +436,9 @@ api.add_resource(Workspace, '/api/workspace')
 api.add_resource(Test_SFAPI_Connection, '/api/v1/sfapi/connect')
 api.add_resource(Test_SFAPI_Get_Task, '/api/v1/sfapi/get/task/<int:task_id>')
 api.add_resource(Test_SFAPI_Post_Wflows, '/api/v1/sfapi/post/wflows')
+api.add_resource(Test_Remove_File, "/api/v1/sfapi/file/delete/")
 api.add_resource(WorkflowSubmission, '/api/v1/workflow/submit')
 api.add_resource(WorkflowDeletion, "/api/v1/workflow/delete/<string:workflow_id>")
+
+
 

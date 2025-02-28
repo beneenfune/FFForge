@@ -143,25 +143,60 @@ def cat_file(file_dir, file_name):
     if cat_response.status_code == 200:
         cat_response_data = cat_response.json()
         if cat_response_data.get('status') == 'OK':
-
-            # Print POST response
-            print(f"Response from POST: {cat_response_data}")
-
-            # # Send the GET request with the task command
-            # task_id = cat_response_data.get('task_id')
-            # task_endpoint = f"https://api.nersc.gov/api/v1.2/tasks/{task_id}"
-            # task_response = session.get(task_endpoint)
-
-            # # Print GET response
-            # task_response_data = task_response.json()
-            # print(f"Response from GET: {task_response_data}")
-
             return cat_response_data
         else:
             print(f"Failed to cat file: {cat_response.get('error')}")
             return None
     else:
         print(f"HTTP request failed with status code: {cat_response.status_code}")
+        return None
+    
+def remove_file(file_dir, file_name):
+    """Remove the file in Perlmutter login node by running a rm command."""
+    
+    # Construct the command to cat the file
+    cmd = f'rm {file_dir}/{file_name}'
+
+    # Define the API endpoint
+    command_endpoint = "https://api.nersc.gov/api/v1.2/utilities/command/perlmutter"
+
+    # Send the POST request with the cat command
+    rm_response = session.post(command_endpoint, data={"executable": cmd})
+
+    # Check if the request was successful
+    if rm_response.status_code == 200:
+        rm_response_data = rm_response.json()
+        if rm_response_data.get('status') == 'OK':
+            return rm_response_data
+        else:
+            print(f"Failed to remove file: {rm_response.get('error')}")
+            return None
+    else:
+        print(f"HTTP request failed with status code: {rm_response.status_code}")
+        return None
+    
+def recursively_rm_dir(dir_to_rm):
+    """Remove a directory in Perlmutter login node by running a rm -r command."""
+    
+    # Construct the command to cat the file
+    cmd = f'rm -r {dir_to_rm}'
+
+    # Define the API endpoint
+    command_endpoint = "https://api.nersc.gov/api/v1.2/utilities/command/perlmutter"
+
+    # Send the POST request with the cat command
+    rm_response = session.post(command_endpoint, data={"executable": cmd})
+
+    # Check if the request was successful
+    if rm_response.status_code == 200:
+        rm_response_data = rm_response.json()
+        if rm_response_data.get('status') == 'OK':
+            return rm_response_data
+        else:
+            print(f"Failed to remove directory recursively: {rm_response.get('error')}")
+            return None
+    else:
+        print(f"HTTP request failed with status code: {rm_response.status_code}")
         return None
 
 def get_task(task_id):
