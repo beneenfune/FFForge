@@ -54,6 +54,7 @@ SFAPI_PRIVATE_KEY="PEM Long string"
 
 ```
 python3 run.py
+# or nodemon run.py
 ```
 
 - Run `npm run dev` when in the `frontend` directory

@@ -298,6 +298,8 @@ class Test_SFAPI_Post_Wflows(Resource):
     
 class WorkflowSubmission(Resource):
     def post(self):
+        structure_file_path = None
+        json_file_path = None
         try:
             # Get form data
             data = {
@@ -343,40 +345,29 @@ class WorkflowSubmission(Resource):
             structure_file.save(structure_file_path) # Save the structure file locally
 
             # Create JSON file containing workflow specifications
-            try:
-                json_filename = f"wf_specifications_{prefix}_{workflow_id}.json"
-                json_file_path = os.path.join('static', json_filename)
+            json_filename = f"wf_specifications_{prefix}_{workflow_id}.json"
+            json_file_path = os.path.join('static', json_filename)
 
-                wf_specification = {
-                    "workflow_id": str(workflow_id),
-                    "prefix": data["prefix"],
-                    "max_structures": data["max_structures"],
-                    "purpose": data["purpose"],
-                    "structure_type": data["structure_type"],
-                    "use_active_learning": data["use_active_learning"],
-                    "structure_filename": new_filename  # Store reference to the structure file
-                }
+            wf_specification = {
+                "workflow_id": str(workflow_id),
+                "prefix": data["prefix"],
+                "max_structures": data["max_structures"],
+                "purpose": data["purpose"],
+                "structure_type": data["structure_type"],
+                "use_active_learning": data["use_active_learning"],
+                "structure_filename": new_filename  # Store reference to the structure file
+            }
 
-                # Write JSON data to file
-                with open(json_file_path, 'w') as json_file:
-                    json.dump(wf_specification, json_file, indent=4)
-
-            except Exception as e:
-                return {'error': f"Failed to create workflow specification JSON: {str(e)}"}, 500
+            # Write JSON data to file
+            with open(json_file_path, 'w') as json_file:
+                json.dump(wf_specification, json_file, indent=4)
 
             # Upload files to Perlmutter
             try:
                 asyncio.run(upload_file(structure_file_path, new_directory)) # Upload structure file
                 asyncio.run(upload_file(json_file_path, new_directory)) # Upload workflow specification file
 
-                os.remove(structure_file_path)
-                os.remove(json_file_path)
-
             except Exception as e:
-                if os.path.exists(structure_file_path):
-                    os.remove(structure_file_path)
-                if os.path.exists(json_file_path):
-                    os.remove(json_file_path)
                 return {'error': f"Failed to upload files to Perlmutter: {str(e)}"}, 500
 
             return {
@@ -387,6 +378,13 @@ class WorkflowSubmission(Resource):
 
         except Exception as e:
             return {"error": str(e)}, 400  # HTTP 400 Bad Request
+        
+        finally:
+            # Remove local files if they exist
+            if structure_file_path and os.path.exists(structure_file_path):
+                os.remove(structure_file_path)
+            if json_file_path and os.path.exists(json_file_path):
+                os.remove(json_file_path)
 
 
 class WorkflowDeletion(Resource):
@@ -406,7 +404,7 @@ class WorkflowDeletion(Resource):
                     raise EnvironmentError("ROOT_DIR environment variable not set.")
                 
                 # Construct the full path of the workflow directory on Perlmutter
-                workflow_dir = root_dir + "/workflows/"+ workflow_id
+                workflow_dir = root_dir + "workflows/"+ workflow_id
                 
                 # Attempt to remove the workflow directory from Perlmutter
                 rm_dir = recursively_rm_dir(workflow_dir)
