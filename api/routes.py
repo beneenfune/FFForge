@@ -404,7 +404,7 @@ class WorkflowDeletion(Resource):
                     raise EnvironmentError("ROOT_DIR environment variable not set.")
                 
                 # Construct the full path of the workflow directory on Perlmutter
-                workflow_dir = root_dir + "workflows/"+ workflow_id
+                workflow_dir = root_dir + "/workflows/"+ workflow_id
                 
                 # Attempt to remove the workflow directory from Perlmutter
                 rm_dir = recursively_rm_dir(workflow_dir)
