@@ -301,14 +301,23 @@ class WorkflowSubmission(Resource):
         structure_file_path = None
         json_file_path = None
         try:
-            # Get form data
+            # Extract base fields
             data = {
                 "prefix": request.form.get('prefix'),
                 "max_structures": int(request.form.get('max_structures')),
                 "purpose": request.form.get('purpose'),
-                "structure_type": request.form.get('structure_type'),
-                "use_active_learning": request.form.get('use_active_learning')
+                "use_active_learning": request.form.get('use_active_learning'),
             }
+
+            # Conditionally extract additional fields
+            if data["purpose"] == "DMA":
+                data["structure_type"] = request.form.get("structure_type")
+            elif data["purpose"] == "Electrode depletion":
+                data["atom_to_remove"] = request.form.get("atom_to_remove")
+            elif data["purpose"] == "Electrolyte analysis":
+                data["electrolyte_atoms"] = request.form.get("electrolyte_atoms")
+            elif data["purpose"] == "Adsorption analysis":
+                data["adsorbate_molecules"] = request.form.get("adsorbate_molecules")
 
             # Create workflow entry
             workflow_entry = create_workflow_entry(data)
@@ -348,15 +357,27 @@ class WorkflowSubmission(Resource):
             json_filename = f"wf_specifications_{prefix}_{workflow_id}.json"
             json_file_path = os.path.join('static', json_filename)
 
+
+            # Base specification
             wf_specification = {
                 "workflow_id": str(workflow_id),
                 "prefix": data["prefix"],
                 "max_structures": data["max_structures"],
                 "purpose": data["purpose"],
-                "structure_type": data["structure_type"],
                 "use_active_learning": data["use_active_learning"],
                 "structure_filename": new_filename  # Store reference to the structure file
             }
+
+            # Conditionally add fields based on purpose
+            if data["purpose"] == "DMA":
+                wf_specification["structure_type"] = data["structure_type"]
+            elif data["purpose"] == "Electrode depletion":
+                wf_specification["atom_to_remove"] = data["atom_to_remove"]
+            elif data["purpose"] == "Electrolyte analysis":
+                wf_specification["electrolyte_atoms"] = data["electrolyte_atoms"]
+            elif data["purpose"] == "Adsorption analysis":
+                wf_specification["adsorbate_molecules"] = data["adsorbate_molecules"]
+
 
             # Write JSON data to file
             with open(json_file_path, 'w') as json_file:

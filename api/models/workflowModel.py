@@ -6,9 +6,19 @@ def create_workflow_entry(data):
         "prefix": data["prefix"],
         "max_structures": data["max_structures"],
         "purpose": data["purpose"],
-        "structure_type": data["structure_type"],
         "use_active_learning": data["use_active_learning"],
-        "status": "submitted",  # Initial status
-        "created_at": datetime.now(timezone.utc)  # ✅ Correct UTC timestamp
+        "status": "submitted",  
+        "created_at": datetime.now(timezone.utc) 
     }
+
+    # Conditionally add fields based on purpose
+    if data["purpose"] == "DMA" and "structure_type" in data:
+        workflow_entry["structure_type"] = data["structure_type"]
+    elif data["purpose"] == "Electrode depletion" and "atom_to_remove" in data:
+        workflow_entry["atom_to_remove"] = data["atom_to_remove"]
+    elif data["purpose"] == "Electrolyte analysis" and "electrolyte_atoms" in data:
+        workflow_entry["electrolyte_atoms"] = data["electrolyte_atoms"]
+    elif data["purpose"] == "Adsorption analysis" and "adsorbate_molecules" in data:
+        workflow_entry["adsorbate_molecules"] = data["adsorbate_molecules"]
+
     return workflow_entry

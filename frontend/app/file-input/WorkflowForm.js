@@ -13,20 +13,36 @@ const WorkflowForm = () => {
   const [useActiveLearning, setUseActiveLearning] = useState("");
   const [prefix, setPrefix] = useState("");
   const [maxStructures, setMaxStructures] =  useState(0);
-  const [filePath, setFilePath] = useState("");
-  const [successMessage, setSuccessMessage] = useState(""); 
+  const [successMessage, setSuccessMessage] = useState("");
+  const [atomToRemove, setAtomToRemove] = useState("");
+  const [electrolyteAtoms, setElectrolyteAtoms] = useState("");
+  const [adsorbateMolecules, setAdsorbateMolecules] = useState("");
 
   // Use axios to handle multiple objects including files
   function handleSubmit(event) {
     event.preventDefault();
     const url = process.env.NEXT_PUBLIC_BASE_URL + "/api/v1/workflow/submit";
     const formData = new FormData();
-    formData.append("structure_file", structureFile);
     formData.append("purpose", primaryPurpose);
-    formData.append("structure_type", structureType);
     formData.append("use_active_learning", useActiveLearning);
     formData.append("max_structures", maxStructures);
     formData.append("prefix", prefix);
+
+    // Conditionally append fields based on primaryPurpose
+    if (primaryPurpose === "DMA") {
+      formData.append("structure_type", structureType);
+    } else if (primaryPurpose === "Electrode depletion") {
+      formData.append("atom_to_remove", atomToRemove);
+    } else if (primaryPurpose === "Electrolyte analysis") {
+      formData.append("electrolyte_atoms", electrolyteAtoms);
+    } else if (primaryPurpose === "Adsorption analysis") {
+      formData.append("adsorbate_molecules", adsorbateMolecules);
+    }
+
+    // Ensure file is uploaded if required
+    if (structureFile) {
+      formData.append("structure_file", structureFile);
+    }
 
     const config = {
       headers: {
@@ -40,8 +56,8 @@ const WorkflowForm = () => {
       .then((response) => {
         // Handle success
         if (response.status >= 200 && response.status < 300) {
-        //   const file_path = response.data.structure_path;
-        //   setFilePath(file_path); // Set the file path in the state
+          //   const file_path = response.data.structure_path;
+          //   setFilePath(file_path); // Set the file path in the state
           setSuccessMessage(response.data.message); // Set the success message in the state
         } else {
           // Handle error if status code is not in the range of 2xx
@@ -53,55 +69,12 @@ const WorkflowForm = () => {
       });
   }
 
-//   // Function to handle file download
-//   const handleDownload = () => {
-//     axios({
-//       url: filePath, // Use the filePath from the state
-//       method: "GET",
-//       responseType: "blob", // Important
-//     })
-//       .then((response) => {
-//         // Extract the file name from the file path
-//         const contentDisposition = response.headers["content-disposition"];
-//         let filename = "downloaded_file"; // Default filename
-
-//         if (contentDisposition) {
-//           const fileNameMatch = contentDisposition.match(/filename="?(.+)"?/);
-//           if (fileNameMatch.length === 2) {
-//             filename = fileNameMatch[1];
-//           }
-//         } else {
-//           // Fallback to extracting filename from filePath if content-disposition header is missing
-//           const filePathParts = filePath.split("/");
-//           filename = filePathParts[filePathParts.length - 1];
-//         }
-
-//         // create file link in browser's memory
-//         const href = URL.createObjectURL(response.data);
-
-//         // create "a" HTML element with href to file & click
-//         const link = document.createElement("a");
-//         link.href = href;
-//         link.setAttribute("download", filename); // Set the download attribute to the original filename
-//         document.body.appendChild(link);
-//         link.click();
-
-//         // clean up "a" element & remove ObjectURL
-//         if (document.body.contains(link)) {
-//           document.body.removeChild(link);
-//         }
-//         URL.revokeObjectURL(href);
-//       })
-//       .catch((error) => {
-//         console.error("Error downloading file: ", error);
-//       });
-//   };
-
   return (
     <form className={styles.create} onSubmit={handleSubmit}>
       {/* STRUCTURE FILE */}
       <label className={styles.label}>
-        Upload a Structure File for your MLFF <span style={{ color: "red" }}>*</span>
+        Upload a Structure File for your MLFF{" "}
+        <span style={{ color: "red" }}>*</span>
       </label>
       <input
         type="file"
@@ -109,7 +82,6 @@ const WorkflowForm = () => {
         required
       />
 
-      
       {/* PREFIX */}
       <div>
         <label className={styles.label}>
@@ -137,33 +109,84 @@ const WorkflowForm = () => {
           required
         >
           <option value="">Select an option</option>
-          <option value="Simple Equilibration">Simple Equilibration</option>
+          <option value="Simple equilibration">Simple equilibration</option>
           <option value="DMA">DMA</option>
-          <option value="Anode depletion">Anode depletion</option>
-          <option value="Electrolyte chemical environment">
-            Electrolyte chemical environment
-          </option>
+          <option value="Electrode depletion">Electrode depletion</option>
+          <option value="Electrolyte analysis">Electrolyte analysis</option>
           <option value="Adsorption analysis">Adsorption analysis</option>
         </select>
       </div>
 
-      {/* STRUCTURE TYPE */}
-      <div>
-        <label className={styles.label}>
-          Which structure type would you like to use?
-          <span style={{ color: "red" }}>*</span>
-        </label>
-        <select
-          value={structureType}
-          onChange={(e) => setStructureType(e.target.value)}
-          required
-        >
-          <option value="">Select an option</option>
-          <option value="Crystalline">Crystalline</option>
-          <option value="Amorphous">Amorphous</option>
-          <option value="Molecular">Molecular</option>
-        </select>
-      </div>
+      {/* STRUCTURE TYPE (only for DMA) */}
+      {primaryPurpose === "DMA" && (
+        <div>
+          <label className={styles.label}>
+            Which structure type would you like to use?
+            <span style={{ color: "red" }}>*</span>
+          </label>
+          <select
+            value={structureType}
+            onChange={(e) => setStructureType(e.target.value)}
+            required
+          >
+            <option value="">Select an option</option>
+            <option value="Crystalline">Crystalline</option>
+            <option value="Amorphous">Amorphous</option>
+            <option value="Semi-crystalline">Semi-crystalline</option>
+          </select>
+        </div>
+      )}
+
+      {/* Electrode Depletion - Select Atom to Remove */}
+      {primaryPurpose === "Electrode depletion" && (
+        <div>
+          <label className={styles.label}>
+            Which atom would you like to remove? (e.g. Li, Na)
+            <span style={{ color: "red" }}>*</span>
+          </label>
+          <input
+            type="text"
+            value={atomToRemove}
+            onChange={(e) => setAtomToRemove(e.target.value)}
+            placeholder="Enter the atom symbol"
+            required
+          />
+        </div>
+      )}
+
+      {/* Electrolyte Analysis - Enter Electrolyte Atoms */}
+      {primaryPurpose === "Electrolyte analysis" && (
+        <div>
+          <label className={styles.label}>
+            What are your electrolyte atoms? (e.g. [Li, OH])
+            <span style={{ color: "red" }}>*</span>
+          </label>
+          <input
+            type="text"
+            value={electrolyteAtoms}
+            onChange={(e) => setElectrolyteAtoms(e.target.value)}
+            placeholder="Enter a list of atom symbols" // TODO: replace with better logic than text input for a list
+            required
+          />
+        </div>
+      )}
+
+      {/* Adsorption Analysis - Enter Adsorbate Molecules */}
+      {primaryPurpose === "Adsorption analysis" && (
+        <div>
+          <label className={styles.label}>
+            What are your adsorbate molecules? (e.g. [H, CO, CO2])
+            <span style={{ color: "red" }}>*</span>
+          </label>
+          <input
+            type="text"
+            value={adsorbateMolecules}
+            onChange={(e) => setAdsorbateMolecules(e.target.value)}
+            placeholder="Enter a list of molecules" // TODO: replace with better logic than text input for a list
+            required
+          />
+        </div>
+      )}
 
       {/* MAX STRUCTURES */}
       <div>
@@ -180,11 +203,10 @@ const WorkflowForm = () => {
         />
       </div>
 
-
-        {/* ACTIVE LEARNING */}
-        <div>
+      {/* ACTIVE LEARNING */}
+      <div>
         <label className={styles.label}>
-          Would you like to use active learning, RECOMMENDED? 
+          Would you like to use active learning? (RECOMMENDED)?
           <span style={{ color: "red" }}>*</span>
         </label>
         <select
@@ -200,7 +222,7 @@ const WorkflowForm = () => {
 
       {/* Submit button */}
       <div>
-        <input type="submit" value="Submit" className={styles.button}/>
+        <input type="submit" value="Submit" className={styles.button} />
       </div>
 
       {/* Display success message if available */}
@@ -209,15 +231,6 @@ const WorkflowForm = () => {
           <p className={styles.successMessage}>{successMessage}</p>
         </div>
       )}
-
-      {/* Download button, shown only when filePath is available
-      {filePath && (
-        <div>
-          <button type="button" className={styles.button} onClick={handleDownload}>
-            Download File
-          </button>
-        </div>
-      )} */}
     </form>
   );
 };
