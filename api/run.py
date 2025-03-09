@@ -1,6 +1,9 @@
 from __init__ import app
+from watcher import start_watcher
+
 
 # To start API
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=8000)
+    start_watcher()  # Start the MongoDB status watcher
+    app.run(debug=False, host='0.0.0.0', port=8000)
 

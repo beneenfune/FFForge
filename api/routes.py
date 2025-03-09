@@ -407,10 +407,6 @@ class WorkflowSubmission(Resource):
             new_status = "generating runs"
             update_workflow_status(new_status, str(workflow_id))
 
-            # Call generate worker step 
-            next_step = "generate"
-            run_worker_step(next_step, str(workflow_id))
-
             return {
                 "message": "Workflow submitted and files uploaded successfully!",
                 "workflow_id": str(workflow_id),
