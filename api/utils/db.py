@@ -2,6 +2,7 @@ from pymongo import MongoClient, errors
 from dotenv import load_dotenv
 import os
 import ssl
+from bson import ObjectId
 
 # Load environment variables from .env
 load_dotenv()
@@ -30,3 +31,24 @@ except Exception as e:
 ffforge_collection = db['ffforge_collection']
 users_collection = db['users']
 workflows_collection = db['workflows']  
+
+# Functions
+def update_workflow_status(new_status, workflow_id):
+    """Update the status of a workflow in the database.
+
+    Args:
+        workflow_id (str): The ID of the workflow to update.
+        new_status (str): The new status to set.
+
+    Returns:
+        dict: The updated workflow document or None if not found.
+    """
+    result = workflows_collection.find_one_and_update(
+        {"_id": ObjectId(workflow_id)},
+        {"$set": {"status": new_status}},
+        return_document=True  # Return the updated document
+    )
+    
+    return {
+        "status" : new_status
+    }

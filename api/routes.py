@@ -3,9 +3,9 @@ from __init__ import api
 from flask import request, send_from_directory, url_for, jsonify, make_response
 from flask_restful import Resource, reqparse
 from utils.demo import mlff_trj_gen, remove_dir, zip_dir
-from utils.sfapi import upload_file, create_directory_on_login_node, get_status, cat_file, get_task, get_all_lpad_wflows, remove_file, recursively_rm_dir
+from utils.sfapi import upload_file, create_directory_on_login_node, get_status, cat_file, get_task, get_all_lpad_wflows, remove_file, recursively_rm_dir, run_worker_step
 from utils.preprocessing import generate_hash
-from utils.db import ffforge_collection, users_collection, workflows_collection  
+from utils.db import ffforge_collection, users_collection, workflows_collection, update_workflow_status
 from models.workflowModel import create_workflow_entry  # Import model function
 
 from bson.objectid import ObjectId
@@ -295,6 +295,18 @@ class Test_SFAPI_Post_Wflows(Resource):
     # Get launchpad workflows: to
     def post(self):
         return get_all_lpad_wflows()
+        
+class Test_WorkflowSubmission(Resource):
+    def post(self):
+        worker_step = request.form.get('worker_step')
+        workflow_id = request.form.get('workflow_id')
+        return run_worker_step(worker_step, workflow_id)
+
+class Test_UpdateStatus(Resource):
+    def post(self):
+        workflow_id = request.form.get('workflow_id')
+        new_status = request.form.get('new_status')
+        return update_workflow_status(new_status, workflow_id)
     
 class WorkflowSubmission(Resource):
     def post(self):
@@ -390,11 +402,18 @@ class WorkflowSubmission(Resource):
 
             except Exception as e:
                 return {'error': f"Failed to upload files to Perlmutter: {str(e)}"}, 500
+            
+            # Update mongoDB wf entry
+            new_status = "generating runs"
+            update_workflow_status(new_status, str(workflow_id))
+
+            # Call generate worker step 
+            next_step = "generate"
+            run_worker_step(next_step, str(workflow_id))
 
             return {
                 "message": "Workflow submitted and files uploaded successfully!",
                 "workflow_id": str(workflow_id),
-                "status": "submitted"
             }, 201  # HTTP 201 Created
 
         except Exception as e:
@@ -468,8 +487,9 @@ api.add_resource(Test_SFAPI_Connection, '/api/v1/sfapi/connect')
 api.add_resource(Test_SFAPI_Get_Task, '/api/v1/sfapi/get/task/<int:task_id>')
 api.add_resource(Test_SFAPI_Post_Wflows, '/api/v1/sfapi/post/wflows')
 api.add_resource(Test_Remove_File, "/api/v1/sfapi/file/delete/")
+api.add_resource(Test_WorkflowSubmission, "/api/v1/sfapi/test/workflow/submit")
+api.add_resource(Test_UpdateStatus, "/api/v1/sfapi/test/update/workflow")
 api.add_resource(WorkflowSubmission, '/api/v1/workflow/submit')
 api.add_resource(WorkflowDeletion, "/api/v1/workflow/delete/<string:workflow_id>")
-
 
 

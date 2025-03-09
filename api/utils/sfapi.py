@@ -243,3 +243,33 @@ def get_all_lpad_wflows():
     else:
         print(f"[ERROR] HTTP request failed with status code: {wflows_response.status_code}")
         return {"error": f"Request failed with status code {wflows_response.status_code}"}
+
+
+def run_worker_step(worker_step, workflow_id):
+    """Call worker step scripts (generate, run, write) on NERSC via sfapi's run command"""
+
+    # Construct the command to call the worker step script
+    root_dir = os.getenv("ROOT_DIR")
+    worker_dir = root_dir +"/utils/"+worker_step+".py"
+    workflow_dir = root_dir +"/workflows/"+ workflow_id
+    cmd = f'python {worker_dir} {workflow_dir}'
+
+    # Define the API endpoint
+    command_endpoint = "https://api.nersc.gov/api/v1.2/utilities/command/perlmutter"
+
+    # Send the POST request with the step command
+    step_response = session.post(command_endpoint, data={"executable": cmd})
+
+    # Check if the request was successful
+    if step_response.status_code == 200:
+        step_response_data = step_response.json()
+        if step_response_data.get('status') == 'OK':
+            return step_response_data
+        else:
+            print(f"Failed to run worker step: {step_response.get('error')}")
+            return None
+    else:
+        print(f"HTTP request failed with status code: {step_response.status_code}")
+        return None
+    
+
