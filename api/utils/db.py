@@ -17,7 +17,6 @@ if not MONGO_URI:
 # Set up MongoDB client
 try:
     client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)  # 5s timeout
-    db = client['ffforge_db']
     # Test connection
     client.server_info()  # This forces a connection attempt
 except errors.ServerSelectionTimeoutError as e:
@@ -26,6 +25,9 @@ except ssl.SSLError as e:
     raise ConnectionError("Failed to connect to MongoDB: SSL handshake error. Verify your MongoDB TLS settings or update the remote IP.") from e
 except Exception as e:
     raise ConnectionError(f"Failed to connect to MongoDB: {str(e)}")
+
+db = client['ffforge_db']
+
 
 # Collections
 ffforge_collection = db['ffforge_collection']
@@ -48,7 +50,7 @@ def update_workflow_status(new_status, workflow_id):
         {"$set": {"status": new_status}},
         return_document=True  # Return the updated document
     )
-    
+
     return {
         "status" : new_status
     }

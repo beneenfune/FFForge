@@ -5,6 +5,7 @@ from pymongo import MongoClient
 from utils.sfapi import run_worker_step
 from utils.db import  workflows_collection, update_workflow_status
 import os
+import asyncio
 
 
 # Status-action mapping
@@ -20,7 +21,11 @@ def handle_status_change(workflow_id, new_status):
     if new_status in STATUS_ACTIONS:
         next_step = STATUS_ACTIONS[new_status]
         print(f"Triggering {next_step} step for workflow {workflow_id}.")
-        run_worker_step(next_step, str(workflow_id))  # Run the corresponding function
+        asyncio.run(run_worker_step(next_step, str(workflow_id)))  # Run the corresponding function
+        if new_status == "generating runs":
+            update_workflow_status("launching to queue", str(workflow_id))
+        elif new_status == "launching to queue":
+            print("Pause from watcher.py. Implement run.py")
 
 def watch_workflow_status():
     """Watches the workflow collection for status changes."""

@@ -245,7 +245,7 @@ def get_all_lpad_wflows():
         return {"error": f"Request failed with status code {wflows_response.status_code}"}
 
 
-def run_worker_step(worker_step, workflow_id):
+async def run_worker_step(worker_step, workflow_id):
     """Call worker step scripts (generate, run, write) on NERSC via sfapi's run command"""
 
     # Construct the command to call the worker step script
