@@ -13,7 +13,8 @@ export const useNavigation = () => {
     };
 
     const navigateToKetcher = () => {
-        router.push('/edit');
+        // router.push('/edit'); TODO: implement GUI
+        router.push("/landing");
     };
 
     const navigateToLanding = () => {
