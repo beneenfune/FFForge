@@ -37,7 +37,7 @@ export default function TextInput() {
       <div className={styles.body}>
         <div className={styles.content}>
           <h3 className={styles.heading3}>
-            Begin generating your forcefield:
+            Begin generating your forcefield
           </h3>
           <p>
             <button

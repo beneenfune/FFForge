@@ -15,7 +15,7 @@ export default function MyWorkflows() {
       try {
         const response = await fetch("/api/v1/workflow/all");
         const data = await response.json();
-        setWorkflows(data.workflows); // Ensure accessing `data.workflows`
+        setWorkflows(data.workflows); 
       } catch (error) {
         console.error("Error fetching workflows:", error);
       } finally {

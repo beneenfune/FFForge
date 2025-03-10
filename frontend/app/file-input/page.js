@@ -16,7 +16,7 @@ export default function FileInput() {
     <Layout>
       <div className={styles.body}>
         <div className={styles.content}>
-          <h3 className={styles.heading3}>Begin generating your forcefield:</h3>
+          <h3 className={styles.heading3}>Begin generating your forcefield</h3>
           <p>
             <button
               onClick={navigateToFileInput}
