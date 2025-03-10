@@ -466,6 +466,22 @@ class Test_Remove_File(Resource):
         rm_results["next_step"] = "please run task_id in 'Get Task from ID endpoint' to confirm rm"
         return { "rm_results": rm_results }
 
+class WorkflowsGetAll(Resource):
+    def get(self):
+        try:
+            # Fetch all workflows from the collection
+            workflows = list(workflows_collection.find({}, {"_id": 1, "prefix": 1, "max_structures": 1, "purpose": 1, "status": 1, "created_at": 1}))
+            
+            # Convert ObjectId to string for JSON serialization
+            for workflow in workflows:
+                workflow["_id"] = str(workflow["_id"])
+                workflow["created_at"] = workflow["created_at"].isoformat()  # Convert datetime to string
+            
+            return jsonify({"workflows": workflows})
+        
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500        
+
 # V0
 api.add_resource(Home, '/api/')
 api.add_resource(DemoGenerator, '/api/demo_gen/')
@@ -487,5 +503,6 @@ api.add_resource(Test_WorkflowSubmission, "/api/v1/sfapi/test/workflow/submit")
 api.add_resource(Test_UpdateStatus, "/api/v1/sfapi/test/update/workflow")
 api.add_resource(WorkflowSubmission, '/api/v1/workflow/submit')
 api.add_resource(WorkflowDeletion, "/api/v1/workflow/delete/<string:workflow_id>")
+api.add_resource(WorkflowsGetAll, "/api/v1/workflow/all")
 
 
