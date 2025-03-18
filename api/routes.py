@@ -3,7 +3,7 @@ from __init__ import api
 from flask import request, send_from_directory, url_for, jsonify, make_response
 from flask_restful import Resource, reqparse
 from utils.demo import mlff_trj_gen, remove_dir, zip_dir
-from utils.sfapi import upload_file, create_directory_on_login_node, get_status, cat_file, get_task, get_all_lpad_wflows, remove_file, recursively_rm_dir, run_worker_step
+from utils.sfapi import upload_file, create_directory_on_login_node, get_status, cat_file, get_task, get_all_lpad_wflows, remove_file, recursively_rm_dir, run_worker_step, get_lpad_wf
 from utils.preprocessing import generate_hash
 from utils.db import ffforge_collection, users_collection, workflows_collection, update_workflow_status
 from models.workflowModel import create_workflow_entry  # Import model function
@@ -262,37 +262,57 @@ class Test_SFAPI_Connection(Resource):
 class Test_SFAPI_Get_Task(Resource):
     """API Resource to fetch task outputs."""
 
-    # Get Task based on task id: for getting outputs of Run Commands purposes
     def get(self, task_id):
-        result = get_task(task_id)
+        max_retries = int(request.args.get("max_retries", 10))
+        delay = int(request.args.get("delay", 5))
+        result = get_task(task_id, max_retries=max_retries, delay=delay)
+        
+        # Check if 'result' exists in task data
+        raw_result = result.get("result")  # Get raw result string
+        if not raw_result:
+            return {"error": "No result found for the given task."}, 404
 
-        try:
-            # Ensure 'result' is parsed correctly
-            parsed_result = json.loads(result["result"]) if isinstance(result["result"], str) else result["result"]
+        # Parse raw_result if it's a string
+        if isinstance(raw_result, str):
+            try:
+                result_data = json.loads(raw_result)
+            except json.JSONDecodeError as e:
+                print(f"[ERROR] JSON decode error: {str(e)}")
+                return {"error": "Failed to parse task result."}, 500
+        else:
+            result_data = raw_result  # It's already a dictionary
 
-            # Ensure 'output' is correctly processed
-            if "output" in parsed_result:
-                if isinstance(parsed_result["output"], str):
-                    try:
-                        # Attempt to parse output as JSON (if it's a JSON string)
-                        parsed_result["output"] = json.loads(parsed_result["output"])
-                    except json.JSONDecodeError:
-                        # If JSON parsing fails, keep output as a string
-                        pass
+        # Now check if "output" exists in parsed result_data
+        if "output" not in result_data or result_data["output"] is None:
+            return {"error": "No output found in task result."}, 404
 
-            # Ensure `output` is in the expected format (string or list)
-            if not isinstance(parsed_result["output"], (str, list)):
-                return {"error": "Unexpected output format"}
+        # Extract and parse the output if needed
+        output_data = result_data["output"]
 
-            return parsed_result["output"]  # Return parsed output
+        # Check if output is a string that needs parsing
+        if isinstance(output_data, str):
+            try:
+                output_data = json.loads(output_data)
+            except json.JSONDecodeError:
+                pass  # Leave it as a string if it's not valid JSON
 
-        except json.JSONDecodeError as e:
-            return {"error": f"JSON decode error: {str(e)}"}
+        # Validate output format (string, list, or dict expected)
+        if not isinstance(output_data, (str, list, dict)):
+            print(output_data)
+            return {"error": "Unexpected output format."}, 500
 
-        return result["result"]
+        return output_data, 200
 
-class Test_SFAPI_Post_Wflows(Resource):
-    # Get launchpad workflows: to
+
+
+class Test_SFAPI_Wflows(Resource):
+    # Get a launchpad workflow 
+    def get(self):
+        workflow_id = request.form.get('workflow_id')
+        query_filter = request.form.get('query_filter')
+        return get_lpad_wf(workflow_id, query_filter)
+
+    # Get all launchpad workflows
     def post(self):
         return get_all_lpad_wflows()
         
@@ -494,10 +514,11 @@ api.add_resource(Visualize, '/api/visualize')
 api.add_resource(TempFileHandler, '/api/getfile/<string:filename>')
 api.add_resource(Workspace, '/api/workspace')
 
+
 # V1
 api.add_resource(Test_SFAPI_Connection, '/api/v1/sfapi/connect')
 api.add_resource(Test_SFAPI_Get_Task, '/api/v1/sfapi/get/task/<int:task_id>')
-api.add_resource(Test_SFAPI_Post_Wflows, '/api/v1/sfapi/post/wflows')
+api.add_resource(Test_SFAPI_Wflows, '/api/v1/sfapi/test/wflows')
 api.add_resource(Test_Remove_File, "/api/v1/sfapi/file/delete/")
 api.add_resource(Test_WorkflowSubmission, "/api/v1/sfapi/test/workflow/submit")
 api.add_resource(Test_UpdateStatus, "/api/v1/sfapi/test/update/workflow")
