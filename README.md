@@ -9,6 +9,7 @@ FFForge is an on-going project and is its the early stages of development.
 ### Install Required Software
 
 - [Install](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) `Node.js` and `npm`
+- [Install](https://materialsproject.github.io/fireworks/installation.html) `Fireworks`
 - Install Python 3.10
 
 ### Set up a Virtual Environment
@@ -31,6 +32,7 @@ python3 -m venv .venv
 pip3 install -r requirements.txt
 ```
 
+=======
 ### Install Node.js Dependencies
 
 ```bash
@@ -57,7 +59,7 @@ python3 run.py
 # or nodemon run.py
 ```
 
-- Run `npm run dev` when in the `frontend` directory
+Run `npm run dev` when in the `frontend` directory
 
 ```
 npm run dev
