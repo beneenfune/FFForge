@@ -15,6 +15,7 @@ import math
 from ase.io import read, write
 import string
 import time
+import os
 
 def generate_random_string(length):
     characters = string.ascii_letters + string.digits
@@ -36,8 +37,6 @@ def generate_rattled_structures(input_structure, num_structures, output_dir, pre
             write(output_dir + prefix + "_" + generate_hash() + ".xyz", copy_structure)
         else:
             write(output_dir + generate_hash() + ".xyz", copy_structure)
-
-import os
 
 def xyz_to_qe(xyz_file_path, output_dir, boundary_extra=15):
     # Read the XYZ file and extract atomic positions

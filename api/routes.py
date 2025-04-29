@@ -3,14 +3,23 @@ from __init__ import api
 from flask import request, send_from_directory, url_for, jsonify, make_response
 from flask_restful import Resource, reqparse
 from utils.demo import mlff_trj_gen, remove_dir, zip_dir
-from utils.sfapi import upload_file
+from utils.sfapi import upload_file, create_directory_on_login_node, get_status, cat_file, get_task, get_all_lpad_wflows, remove_file, recursively_rm_dir, run_worker_step, get_lpad_wf
+from utils.preprocessing import generate_hash
+from utils.db import ffforge_collection, users_collection, workflows_collection, update_workflow_status
+from fetcher import run_fetcher, stop_fetcher
+from models.workflowModel import create_workflow_entry  # Import model function
 
+from bson.objectid import ObjectId
 import os
 import subprocess
-# import requests
 import asyncio
 import numpy as np
+import json
+from dotenv import load_dotenv
+import time
 
+# Load environment variables from .env file
+load_dotenv()
 
 # Route for Home page
 class Home(Resource):
@@ -113,7 +122,6 @@ class TextInput(Resource):
             'smiles_string': smiles 
         }
     
-    
 # Route for File Input Page
 class FileInput(Resource):
     def get(self, path):
@@ -130,23 +138,47 @@ class FileInput(Resource):
         # Initialize the file path variable
         structure_file_path = ""
 
-        # Save file to the new files in the static directory
+        # Save file to the new file in the static directory
         if structure_file:
             try:
                 original_filename = structure_file.filename
-                structure_file_path = os.path.join('static', original_filename)
+                prefix = os.path.splitext(original_filename)[0]
+                extension = os.path.splitext(original_filename)[1]
+                
+                # Generate a unique directory name
+                hashed_directory_name = generate_hash()
+
+                # Create a directory in Perlmutter
+                try:
+                    root_dir = os.getenv("ROOT_DIR") + "/sf_api_implementing"
+                    if not root_dir:
+                        raise EnvironmentError("ROOT_DIR environment variable not set.")
+                    
+                    new_directory = create_directory_on_login_node("perlmutter", root_dir, directory_name=hashed_directory_name)
+                    if not new_directory:
+                        return {'error': "Failed to create directory on Perlmutter. Please check configuration and try again."}, 500
+
+                except Exception as e:
+                    return {'error': f"Failed to create directory on Perlmutter: {str(e)}"}, 500
+                
+                print("New directory on Perlmutter: " + new_directory)
+
+                # Construct the new filename
+                new_filename = f"{prefix}_{hashed_directory_name}{extension}"
+                structure_file_path = os.path.join('static', new_filename)
+                
+                # Save the file with the new filename
                 structure_file.save(structure_file_path)
             except Exception as e:
                 return {'error': f"Failed to save structure file: {str(e)}"}, 500
             
             print("The structure_file_path is " + structure_file_path)
-            full_path = url_for('static', filename=original_filename, _external=True)
-            root_dir = os.getenv("ROOT_DIR")
+            full_path = url_for('static', filename=new_filename, _external=True)
 
             # Use sfapi to upload the file to the supercomputer
             try:
                 # Run the asynchronous upload_file function
-                asyncio.run(upload_file(structure_file_path, root_dir))
+                asyncio.run(upload_file(structure_file_path, new_directory))
             except Exception as e:
                 return {'error': f"Failed to upload file to Perlmutter: {str(e)}"}, 500
 
@@ -157,12 +189,10 @@ class FileInput(Resource):
         else:
             return jsonify({"error": "No file uploaded."}), 400
 
-
-# Route for File Input Page
+# Route for Design GUI Page
 class Ketcher(Resource):
     def get(self):
-        return {'design': 'welcome to the design page'}
-    
+        return {'design': 'welcome to the design page'}  
 
 class TempFileHandler(Resource):
     def get(self, filename):
@@ -210,17 +240,330 @@ class Visualize(Resource):
 
         return {'output': output}
 
-class Test_DB(Resource):
+# Route for Workspace Page
+class Workspace(Resource):
+    def get(self):
+        return {'workspace': 'welcome to a random workspace'}
+
+class Test_SFAPI_Connection(Resource):
+
+    # Get NERSC status: for testing connection to NERSC purposes
+    def get(self):
+        status_data = asyncio.run(get_status())
+        return status_data
+
+    # Cat a file in NERSC: for testing Run Command ability purposes
     def post(self):
-        return 1
+        root_dir = os.getenv("ROOT_DIR") + "/sf_api_implementing"
+        file_name = "run_command_file.txt"
+        cat_results = cat_file(root_dir, file_name)
+        cat_results["next_step"] = "please run task_id in 'Get Task from ID endpoint' to confirm cat"
+        return { "cat_result": cat_results }
+
+class Test_SFAPI_Get_Task(Resource):
+    """API Resource to fetch task outputs."""
+
+    def get(self, task_id):
+        max_retries = int(request.args.get("max_retries", 10))
+        delay = int(request.args.get("delay", 5))
+        result = get_task(task_id, max_retries=max_retries, delay=delay)
+        
+        # Check if 'result' exists in task data
+        raw_result = result.get("result")  # Get raw result string
+        if not raw_result:
+            return {"error": "No result found for the given task."}, 404
+
+        # Parse raw_result if it's a string
+        if isinstance(raw_result, str):
+            try:
+                result_data = json.loads(raw_result)
+            except json.JSONDecodeError as e:
+                print(f"[ERROR] JSON decode error: {str(e)}")
+                return {"error": "Failed to parse task result."}, 500
+        else:
+            result_data = raw_result  # It's already a dictionary
+
+        # Now check if "output" exists in parsed result_data
+        if "output" not in result_data or result_data["output"] is None:
+            return {"error": "No output found in task result."}, 404
+
+        # Extract and parse the output if needed
+        output_data = result_data["output"]
+
+        # Check if output is a string that needs parsing
+        if isinstance(output_data, str):
+            try:
+                output_data = json.loads(output_data)
+            except json.JSONDecodeError:
+                pass  # Leave it as a string if it's not valid JSON
+
+        # Validate output format (string, list, or dict expected)
+        if not isinstance(output_data, (str, list, dict)):
+            return {"error": "Unexpected output format."}, 500
+
+        return output_data, 200
+
+
+
+class Test_SFAPI_Wflows(Resource):
+    # Get a launchpad workflow 
+    def get(self):
+        workflow_id = request.form.get('workflow_id')
+        query_filter = request.form.get('query_filter')
+        return get_lpad_wf(workflow_id, query_filter)
+
+    # Get all launchpad workflows
+    def post(self):
+        return get_all_lpad_wflows()
+        
+class Test_WorkflowSubmission(Resource):
+    def post(self):
+        worker_step = request.form.get('worker_step')
+        workflow_id = request.form.get('workflow_id')
+        return run_worker_step(worker_step, workflow_id)
+
+class Test_UpdateStatus(Resource):
+    def post(self):
+        workflow_id = request.form.get('workflow_id')
+        new_status = request.form.get('new_status')
+        return update_workflow_status(new_status, workflow_id)
     
+class WorkflowSubmission(Resource):
+    def post(self):
+        structure_file_path = None
+        json_file_path = None
+        try:
+            # Extract base fields
+            data = {
+                "prefix": request.form.get('prefix'),
+                "max_structures": int(request.form.get('max_structures')),
+                "purpose": request.form.get('purpose'),
+                "use_active_learning": request.form.get('use_active_learning'),
+            }
+
+            # Conditionally extract additional fields
+            if data["purpose"] == "DMA":
+                data["structure_type"] = request.form.get("structure_type")
+            elif data["purpose"] == "Electrode depletion":
+                data["atom_to_remove"] = request.form.get("atom_to_remove")
+            elif data["purpose"] == "Electrolyte analysis":
+                data["electrolyte_atoms"] = request.form.get("electrolyte_atoms")
+            elif data["purpose"] == "Adsorption analysis":
+                data["adsorbate_molecules"] = request.form.get("adsorbate_molecules")
+
+            # Create workflow entry
+            workflow_entry = create_workflow_entry(data)
+            workflow_id = workflows_collection.insert_one(workflow_entry).inserted_id
+
+            # Ensure a file is uploaded
+            if 'structure_file' not in request.files or request.files['structure_file'].filename == '':
+                return {'error': 'A structure file is required for this workflow submission.'}, 400
+            structure_file = request.files.get('structure_file')
+
+            # Create 'static' directory if it doesn't exist
+            if not os.path.exists('static'):
+                os.makedirs('static')
+                
+            original_filename = structure_file.filename
+            prefix = os.path.splitext(original_filename)[0]
+            extension = os.path.splitext(original_filename)[1]
+
+            # Use workflow_id as name of directory to put file in
+            workflow_dir_name = str(workflow_id)
+
+            # Create a directory in Perlmutter
+            root_dir = os.getenv("ROOT_DIR")
+            if not root_dir:
+                raise EnvironmentError("ROOT_DIR environment variable not set.")
+            
+            new_directory = create_directory_on_login_node("perlmutter", root_dir + "/workflows", workflow_dir_name)            
+            if not new_directory:
+                return {'error': "Failed to create directory on Perlmutter."}, 500
+
+            # Construct the new structure file name
+            new_filename = f"{prefix}_{workflow_id}{extension}"
+            structure_file_path = os.path.join('static', new_filename)
+            structure_file.save(structure_file_path) # Save the structure file locally
+
+            # Create JSON file containing workflow specifications
+            json_filename = f"wf_specifications_{prefix}_{workflow_id}.json"
+            json_file_path = os.path.join('static', json_filename)
+
+
+            # Base specification
+            wf_specification = {
+                "workflow_id": str(workflow_id),
+                "prefix": data["prefix"],
+                "max_structures": data["max_structures"],
+                "purpose": data["purpose"],
+                "use_active_learning": data["use_active_learning"],
+                "structure_filename": new_filename  # Store reference to the structure file
+            }
+
+            # Conditionally add fields based on purpose
+            if data["purpose"] == "DMA":
+                wf_specification["structure_type"] = data["structure_type"]
+            elif data["purpose"] == "Electrode depletion":
+                wf_specification["atom_to_remove"] = data["atom_to_remove"]
+            elif data["purpose"] == "Electrolyte analysis":
+                wf_specification["electrolyte_atoms"] = data["electrolyte_atoms"]
+            elif data["purpose"] == "Adsorption analysis":
+                wf_specification["adsorbate_molecules"] = data["adsorbate_molecules"]
+
+
+            # Write JSON data to file
+            with open(json_file_path, 'w') as json_file:
+                json.dump(wf_specification, json_file, indent=4)
+
+            # Upload files to Perlmutter
+            try:
+                asyncio.run(upload_file(structure_file_path, new_directory)) # Upload structure file
+                asyncio.run(upload_file(json_file_path, new_directory)) # Upload workflow specification file
+
+            except Exception as e:
+                return {'error': f"Failed to upload files to Perlmutter: {str(e)}"}, 500
+            
+            # Update mongoDB wf entry
+            new_status = "generating runs"
+            update_workflow_status(new_status, str(workflow_id))
+
+            return {
+                "message": "Workflow submitted and files uploaded successfully!",
+                "workflow_id": str(workflow_id),
+            }, 201  # HTTP 201 Created
+
+        except Exception as e:
+            return {"error": str(e)}, 400  # HTTP 400 Bad Request
+        
+        finally:
+            # Remove local files if they exist
+            if structure_file_path and os.path.exists(structure_file_path):
+                os.remove(structure_file_path)
+            if json_file_path and os.path.exists(json_file_path):
+                os.remove(json_file_path)
+            
+            # Start a fetcher for this workflow
+            # run_fetcher(workflow_id)
+
+
+
+class WorkflowDeletion(Resource):
+    def delete(self, workflow_id):
+        try:
+            # Attempt to delete the workflow entry from MongoDB
+            result = workflows_collection.delete_one({"_id": ObjectId(workflow_id)})
+            
+            # If no document was deleted, return a 404 response indicating workflow not found
+            if result.deleted_count == 0:
+                return {"message": "Workflow not found"}, 404  # Not Found
+            
+            try: 
+                # Retrieve the root directory path from environment variables
+                root_dir = os.getenv("ROOT_DIR")
+                if not root_dir:
+                    raise EnvironmentError("ROOT_DIR environment variable not set.")
+                
+                # Construct the full path of the workflow directory on Perlmutter
+                workflow_dir = root_dir + "/workflows/"+ workflow_id
+                
+                # Attempt to remove the workflow directory from Perlmutter
+                rm_dir = recursively_rm_dir(workflow_dir)
+                if not rm_dir:
+                    return {'error': "Failed to remove workflow directory on Perlmutter. Please check configuration and try again."}, 500
+            except Exception as e:
+                return {'error': f"Failed to upload file to Perlmutter: {str(e)}"}, 500
+            
+            return {"message": "Workflow deleted from database and Perlmutter successfully"}, 200  # Success
+
+        except Exception as e:
+            return {"error": str(e)}, 400  # Bad Request
+        
+class Test_Remove_File(Resource):
+    # Remove a file in NERSC
+    def post(self):
+        
+        sub_dir = request.form.get('sub_dir')
+        file_name = request.form.get('file_name')
+        root_dir = os.getenv("ROOT_DIR")
+        target_dir = root_dir + sub_dir
+        rm_results = remove_file(target_dir, file_name)
+        rm_results["next_step"] = "please run task_id in 'Get Task from ID endpoint' to confirm rm"
+        return { "rm_results": rm_results }
+
+class WorkflowsGetAll(Resource):
+    def get(self):
+        try:
+            # Fetch all workflows from the collection
+            workflows = list(workflows_collection.find({}, {"_id": 1, "prefix": 1, "max_structures": 1, "purpose": 1, "status": 1, "created_at": 1}))
+            
+            # Convert ObjectId to string for JSON serialization
+            for workflow in workflows:
+                workflow["_id"] = str(workflow["_id"])
+                workflow["created_at"] = workflow["created_at"].isoformat()  # Convert datetime to string
+            
+            return jsonify({"workflows": workflows})
+        
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500        
+
+class StartFetcher(Resource):
+    """
+    API to start fetcher for a workflow.
+    """
+
+    def post(self):
+        workflow_id = request.form.get('workflow_id')
+
+        if not workflow_id:
+            return {"error": "workflow_id is required."}, 400
+
+        run_fetcher(workflow_id)
+        return {"message": f"Fetcher started for workflow {workflow_id}."}, 200
+
+class StopFetcher(Resource):
+    """
+    API to stop a running fetcher.
+    """
+
+    def post(self):
+        workflow_id = request.form.get('workflow_id')
+
+        if not workflow_id:
+            return {"error": "workflow_id is required."}, 400
+
+        stop_fetcher(workflow_id)
+        return {"message": f"Fetcher stopped for workflow {workflow_id}."}, 200
+
+
+# Add fetcher endpoints
+api.add_resource(StartFetcher, "/api/v1/start_fetcher")
+api.add_resource(StopFetcher, "/api/v1/stop_fetcher")
+
+# V0
 api.add_resource(Home, '/api/')
 api.add_resource(DemoGenerator, '/api/demo_gen/')
 api.add_resource(DemoDownload, '/static/<path:path>')
 api.add_resource(Landing, '/api/landing/')
 api.add_resource(TextInput, '/api/text-input/')
 api.add_resource(FileInput, '/api/file-input/')
-api.add_resource(Ketcher, '/api/edit/')
+# api.add_resource(Ketcher, '/api/edit/')
 api.add_resource(Visualize, '/api/visualize')
 api.add_resource(TempFileHandler, '/api/getfile/<string:filename>')
+api.add_resource(Workspace, '/api/workspace')
+
+
+# V1
+api.add_resource(Test_SFAPI_Connection, '/api/v1/sfapi/connect')
+api.add_resource(Test_SFAPI_Get_Task, '/api/v1/sfapi/get/task/<int:task_id>')
+api.add_resource(Test_SFAPI_Wflows, '/api/v1/sfapi/test/wflows')
+api.add_resource(Test_Remove_File, "/api/v1/sfapi/file/delete/")
+api.add_resource(Test_WorkflowSubmission, "/api/v1/sfapi/test/workflow/submit")
+api.add_resource(Test_UpdateStatus, "/api/v1/sfapi/test/update/workflow")
+api.add_resource(WorkflowSubmission, '/api/v1/workflow/submit')
+api.add_resource(WorkflowDeletion, "/api/v1/workflow/delete/<string:workflow_id>")
+api.add_resource(WorkflowsGetAll, "/api/v1/workflow/all")
+api.add_resource(StartFetcher, "/api/v1/start_fetcher", endpoint="start_fetcher")
+api.add_resource(StopFetcher, "/api/v1/stop_fetcher", endpoint="stop_fetcher")
+
+
 

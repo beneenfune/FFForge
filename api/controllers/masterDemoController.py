@@ -8,7 +8,6 @@ PATCH
 DELETE
 """
 
-
 class master_demo_inputs(db.Document):
     structure_name = db.StringField()
     temperature_range = db.StringField()
