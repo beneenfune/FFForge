@@ -1,3 +1,5 @@
+# watcher.py
+
 import threading
 import pymongo
 from bson import ObjectId
@@ -5,15 +7,13 @@ from pymongo import MongoClient
 from utils.sfapi import run_worker_step
 from utils.db import  workflows_collection, update_workflow_status
 import os
-import asyncio
 
 
-# Status-action mapping
+# Status-worker mapping
 STATUS_ACTIONS = {
     "generating runs": "generate",
     "launching to queue": "run",
-    # "waiting for jobs": "wait",
-    # "writing": "write",
+    "writing": "write",
 }
 
 def handle_status_change(workflow_id, new_status):
@@ -21,11 +21,27 @@ def handle_status_change(workflow_id, new_status):
     if new_status in STATUS_ACTIONS:
         next_step = STATUS_ACTIONS[new_status]
         print(f"Triggering {next_step} step for workflow {workflow_id}.")
-        asyncio.run(run_worker_step(next_step, str(workflow_id)))  # Run the corresponding function
-        if new_status == "generating runs":
-            update_workflow_status("launching to queue", str(workflow_id))
-        elif new_status == "launching to queue":
-            print("Pause from watcher.py. Implement run.py")
+        response = run_worker_step(next_step, str(workflow_id)) # Run the corresponding function with sfapi
+
+        # if new_status == "waiting for jobs":
+        #     # return # End handle since not watcher's job
+        #     print(f'action pending: {new_status}')
+
+        # elif new_status == "generating runs":
+        #     # If generate finishes, move on to next status
+        #     # update_workflow_status("launching to queue", str(workflow_id))
+        #     print(f'action pending: {new_status}')
+
+        # elif new_status == "launching to queue":
+        #     # If run finishes, move on to next status
+        #     # update_workflow_status("waiting for jobs", str(workflow_id))
+        #     print(f'action pending: {new_status}')
+
+        # elif new_status == "writing":   
+        #     # If write finishes, move on to next status
+        #     print(f'action pending: {new_status}')
+
+        #     print("Pause from watcher.py, implement write.py")
 
 def watch_workflow_status():
     """Watches the workflow collection for status changes."""

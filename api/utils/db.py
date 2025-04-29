@@ -54,3 +54,11 @@ def update_workflow_status(new_status, workflow_id):
     return {
         "status" : new_status
     }
+
+def get_current_status(workflow_id):
+    """
+    Get the current status of the workflow from the database.
+    """
+    # Assuming workflows_collection is defined in db.py
+    workflow = workflows_collection.find_one({"_id": ObjectId(workflow_id)})
+    return workflow.get("status", "some status") # Why generating runs?

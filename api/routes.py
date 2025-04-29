@@ -6,6 +6,7 @@ from utils.demo import mlff_trj_gen, remove_dir, zip_dir
 from utils.sfapi import upload_file, create_directory_on_login_node, get_status, cat_file, get_task, get_all_lpad_wflows, remove_file, recursively_rm_dir, run_worker_step, get_lpad_wf
 from utils.preprocessing import generate_hash
 from utils.db import ffforge_collection, users_collection, workflows_collection, update_workflow_status
+from fetcher import run_fetcher, stop_fetcher
 from models.workflowModel import create_workflow_entry  # Import model function
 
 from bson.objectid import ObjectId
@@ -298,7 +299,6 @@ class Test_SFAPI_Get_Task(Resource):
 
         # Validate output format (string, list, or dict expected)
         if not isinstance(output_data, (str, list, dict)):
-            print(output_data)
             return {"error": "Unexpected output format."}, 500
 
         return output_data, 200
@@ -441,6 +441,10 @@ class WorkflowSubmission(Resource):
                 os.remove(structure_file_path)
             if json_file_path and os.path.exists(json_file_path):
                 os.remove(json_file_path)
+            
+            # Start a fetcher for this workflow
+            # run_fetcher(workflow_id)
+
 
 
 class WorkflowDeletion(Resource):
@@ -502,6 +506,39 @@ class WorkflowsGetAll(Resource):
         except Exception as e:
             return jsonify({"error": str(e)}), 500        
 
+class StartFetcher(Resource):
+    """
+    API to start fetcher for a workflow.
+    """
+
+    def post(self):
+        workflow_id = request.form.get('workflow_id')
+
+        if not workflow_id:
+            return {"error": "workflow_id is required."}, 400
+
+        run_fetcher(workflow_id)
+        return {"message": f"Fetcher started for workflow {workflow_id}."}, 200
+
+class StopFetcher(Resource):
+    """
+    API to stop a running fetcher.
+    """
+
+    def post(self):
+        workflow_id = request.form.get('workflow_id')
+
+        if not workflow_id:
+            return {"error": "workflow_id is required."}, 400
+
+        stop_fetcher(workflow_id)
+        return {"message": f"Fetcher stopped for workflow {workflow_id}."}, 200
+
+
+# Add fetcher endpoints
+api.add_resource(StartFetcher, "/api/v1/start_fetcher")
+api.add_resource(StopFetcher, "/api/v1/stop_fetcher")
+
 # V0
 api.add_resource(Home, '/api/')
 api.add_resource(DemoGenerator, '/api/demo_gen/')
@@ -509,7 +546,7 @@ api.add_resource(DemoDownload, '/static/<path:path>')
 api.add_resource(Landing, '/api/landing/')
 api.add_resource(TextInput, '/api/text-input/')
 api.add_resource(FileInput, '/api/file-input/')
-api.add_resource(Ketcher, '/api/edit/')
+# api.add_resource(Ketcher, '/api/edit/')
 api.add_resource(Visualize, '/api/visualize')
 api.add_resource(TempFileHandler, '/api/getfile/<string:filename>')
 api.add_resource(Workspace, '/api/workspace')
@@ -525,5 +562,8 @@ api.add_resource(Test_UpdateStatus, "/api/v1/sfapi/test/update/workflow")
 api.add_resource(WorkflowSubmission, '/api/v1/workflow/submit')
 api.add_resource(WorkflowDeletion, "/api/v1/workflow/delete/<string:workflow_id>")
 api.add_resource(WorkflowsGetAll, "/api/v1/workflow/all")
+api.add_resource(StartFetcher, "/api/v1/start_fetcher", endpoint="start_fetcher")
+api.add_resource(StopFetcher, "/api/v1/stop_fetcher", endpoint="stop_fetcher")
+
 
 

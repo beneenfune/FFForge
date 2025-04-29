@@ -10,26 +10,40 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
-// Define workflow statuses and corresponding colors
-const statusSteps = [
-  { label: "Generating Runs", color: "#ff9800" }, // Orange
-  { label: "Launching to Queue", color: "#ffca28" }, // Amber
-  { label: "Waiting for Jobs", color: "#fdd835" }, // Yellow
-  { label: "Writing Forcefield", color: "#8bc34a" }, // Light Green
-  { label: "Ready for Download", color: "#4caf50" }, // Green
+// Map backend statuses to UI labels and colors
+const statusMap = {
+  "generating runs": { label: "Generating Jobs", color: "#ff9800" },
+  "launching to queue": { label: "Submitting Jobs", color: "#ffca28" },
+  "waiting for jobs": { label: "Waiting for Jobs", color: "#fdd835" },
+  writing: { label: "Writing Forcefield", color: "#8bc34a" },
+  complete: { label: "Ready to Download", color: "#4caf50" },
+};
+
+// Define the correct step order for the stepper
+const orderedStatuses = [
+  "generating runs",
+  "launching to queue",
+  "waiting for jobs",
+  "writing",
+  "complete",
 ];
 
-// Function to get step index from status
+// Get step index from status string
 const getStepIndex = (status) => {
-  const stepIndex = statusSteps.findIndex(
-    (step) => step.label.toLowerCase() === status.toLowerCase()
-  );
-  return stepIndex !== -1 ? stepIndex : 0; // Default to first step if status is unknown
+  const normalized = status.toLowerCase();
+  const index = orderedStatuses.indexOf(normalized);
+  return index !== -1 ? index : 0;
 };
 
 export default function WorkflowItem({ workflow }) {
-  const activeStep = getStepIndex(workflow.status);
-  const workflowIdTag = `ID: ${workflow._id.slice(-6)}`; 
+  const normalizedStatus = workflow.status.toLowerCase();
+  const activeStep = getStepIndex(normalizedStatus);
+  const currentStatus = statusMap[normalizedStatus] || {
+    label: workflow.status,
+    color: "#9e9e9e",
+  };
+
+  const workflowIdTag = `ID: ${workflow._id.slice(-6)}`;
 
   return (
     <Accordion
@@ -50,16 +64,16 @@ export default function WorkflowItem({ workflow }) {
           <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             {workflow.prefix}
             <Chip
-              label={statusSteps[activeStep].label}
+              label={currentStatus.label}
               sx={{
-                backgroundColor: statusSteps[activeStep].color,
+                backgroundColor: currentStatus.color,
                 color: "#fff",
                 fontWeight: "bold",
               }}
             />
           </span>
 
-          {/* Right Section:  ID + Expand Icon */}
+          {/* Right Section: ID */}
           <span
             style={{
               display: "flex",
@@ -94,20 +108,21 @@ export default function WorkflowItem({ workflow }) {
           }).format(new Date(workflow.created_at))}
         </Typography>
 
-        {/* Progress Stepper*/}
-        <Typography sx={{marginBottom: "10px"}}>
+        {/* Progress Stepper */}
+        <Typography sx={{ marginBottom: "10px" }}>
           <strong>Current Action:</strong>
         </Typography>
-        <span
-          style={{marginTop: "10px", marginBottom: "10px"}}
-        >
+        <span style={{ marginTop: "10px", marginBottom: "10px" }}>
           <Stepper activeStep={activeStep} alternativeLabel>
-            {statusSteps.map((step, index) => (
-              <Step key={step.label}>
+            {orderedStatuses.map((key, index) => (
+              <Step key={key}>
                 <StepLabel
-                  sx={{ color: activeStep >= index ? step.color : "#bdbdbd" }}
+                  sx={{
+                    color:
+                      activeStep >= index ? statusMap[key].color : "#bdbdbd",
+                  }}
                 >
-                  {step.label}
+                  {statusMap[key].label}
                 </StepLabel>
               </Step>
             ))}
