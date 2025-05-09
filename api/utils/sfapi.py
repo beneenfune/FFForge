@@ -269,8 +269,8 @@ def run_worker_step(worker_step, workflow_id):
 
     # Construct the command to call the worker step script
     root_dir = os.getenv("ROOT_DIR")
-    worker_dir = root_dir +"/utils/"+worker_step+".py"
-    workflow_dir = root_dir +"/workflows/"+ workflow_id
+    worker_dir = root_dir + "/src/FFForge/api/nersc/ffforge/" +worker_step+".py"
+    workflow_dir = root_dir + "/workflows/" + workflow_id
     cmd = f'python {worker_dir} {workflow_dir}'
 
     # Define the API endpoint
