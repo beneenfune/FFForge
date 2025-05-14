@@ -118,12 +118,12 @@ export default function Layout({ children }) {
         <List>
           {[
             {
-              text: "My Workflows",
+              text: "My What the woflows",
               path: "/my-workflows",
               icon: <WorkflowsIcon />,
             },
             {
-              text: "Submit Workflows",
+              text: "Subit Woflows",
               path: "/landing",
               icon: <SubmitIcon />,
             },
