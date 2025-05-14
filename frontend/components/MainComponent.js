@@ -10,7 +10,7 @@ const MainComponent = () => {
   return (
     <div className={styles.header}>
       <h1 className={styles.heading1} onClick={navigateToLanding} >FFForge</h1>
-      <h2 className={styles.heading2}>Tfool to genrte forfields for poler strures</h2>
+      <h2 className={styles.heading2}>Tool to genrate forcefields for polymer structures</h2>
     </div>
   );
 }
