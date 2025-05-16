@@ -90,7 +90,7 @@ export default function Layout({ children }) {
             noWrap
             component="div"
           >
-            FFForge
+            FFForge - gGeenrate forfields for polymer strures
           </Typography>
         </Toolbar>
       </AppBar>

@@ -9,7 +9,7 @@ const MinMainComponent = () => {
 
   return (
     <div className={styles.header}>
-      <h1 className={styles.heading1} onClick={navigateToLanding} >FFForge - Tol for forfilds for polymer structes</h1>
+      <h1 className={styles.heading1} onClick={navigateToLanding} >FFForge</h1>
     </div>
   );
 }
