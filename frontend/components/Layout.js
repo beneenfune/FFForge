@@ -123,7 +123,7 @@ export default function Layout({ children }) {
               icon: <WorkflowsIcon />,
             },
             {
-              text: "Subit Woflows",
+              text: "Submit Workflows",
               path: "/landing",
               icon: <SubmitIcon />,
             },
