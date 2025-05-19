@@ -8,6 +8,7 @@ import {
   Step,
   StepLabel,
 } from "@mui/material";
+import { useState } from "react";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 // Map backend statuses to UI labels and colors
@@ -42,10 +43,12 @@ export default function WorkflowItem({ workflow }) {
     label: workflow.status,
     color: "#9e9e9e",
   };
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
   const workflowIdTag = `ID: ${workflow._id.slice(-6)}`;
 
   return (
+    <>
     <Accordion
       sx={{ width: "100%", marginBottom: "10px", fontFamily: "system-ui" }}
     >
@@ -89,24 +92,56 @@ export default function WorkflowItem({ workflow }) {
         </Typography>
       </AccordionSummary>
       <AccordionDetails>
-        <Typography>
-          <strong>Purpose:</strong> {workflow.purpose}
-        </Typography>
-        <Typography>
-          <strong>Trained on:</strong> {workflow.max_structures} structures
-        </Typography>
-        <Typography>
-          <strong>Submitted at:</strong>{" "}
-          {new Intl.DateTimeFormat("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            hour: "numeric",
-            minute: "numeric",
-            second: "numeric",
-            hour12: true,
-          }).format(new Date(workflow.created_at))}
-        </Typography>
+        <div 
+        style ={{ 
+          display: "flex", 
+          justifyContent: "space-between", 
+          gap: "20px"
+          }}
+        >
+          {/* Left Section: Info */}
+          <div style = {{flex: 1}}>
+            <Typography>
+              <strong>Purpose:</strong> {workflow.purpose}
+            </Typography>
+            <Typography>
+              <strong>Trained on:</strong> {workflow.max_structures} structures
+            </Typography>
+            <Typography>
+              <strong>Submitted at:</strong>{" "}
+              {new Intl.DateTimeFormat("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                hour: "numeric",
+                minute: "numeric",
+                second: "numeric",
+                hour12: true,
+              }).format(new Date(workflow.created_at))}
+            </Typography>
+          </div>
+
+          {/* Right Section: Image */}
+          <div 
+            style = {{
+              flexShrink: 0, 
+              width: "20%", 
+              minWidth: "120px", 
+              display: "flex", 
+              justifyContent: "flex-end"
+            }}
+            onClick={() => setIsLightboxOpen(true)}
+          >
+            <img
+            src="/images/mlff_plot_placeholder.png"
+            alt="MLFF accuracy plot"
+            style={{
+              width: "100%",
+              height:"auto",
+              }}
+            />
+          </div>
+        </div>
 
         {/* Progress Stepper */}
         <Typography sx={{ marginBottom: "10px" }}>
@@ -130,5 +165,36 @@ export default function WorkflowItem({ workflow }) {
         </span>
       </AccordionDetails>
     </Accordion>
+    {/* Lightbox */}
+    {isLightboxOpen && (
+      <div
+        onClick={() => setIsLightboxOpen(false)}
+        style= {{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100vw",
+          height: "100vh",
+          backgroundColor: "rgba(0,0,0,0.8)",
+          display:"flex",
+          justifyContent: "center",
+          alignItems: "center",
+          zIndex: 9999,
+        }}
+      >
+        <img
+        src="/images/mlff_plot_placeholder.png"
+        alt="MLFF accuracy plot"
+        style={{
+          maxWidth: "100%",
+          maxHeight: "100%",
+          boxShadow: "0 0 20px rgba(0,0,0,0.5)",
+          backgroundColor: "white",
+          padding: "10px",
+          }}
+        />
+      </div>
+    )}
+  </>
   );
 }
