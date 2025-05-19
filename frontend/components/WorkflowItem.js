@@ -99,7 +99,7 @@ export default function WorkflowItem({ workflow }) {
           gap: "20px"
           }}
         >
-          {/* Right Section: ID */}
+          {/* Left Section: Info */}
           <div style = {{flex: 1}}>
             <Typography>
               <strong>Purpose:</strong> {workflow.purpose}
@@ -121,7 +121,7 @@ export default function WorkflowItem({ workflow }) {
             </Typography>
           </div>
 
-          {/* Left Section: Image */}
+          {/* Right Section: Image */}
           <div 
             style = {{
               flexShrink: 0, 
