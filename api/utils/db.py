@@ -33,6 +33,7 @@ db = client['ffforge_db']
 ffforge_collection = db['ffforge_collection']
 users_collection = db['users']
 workflows_collection = db['workflows']  
+dummy_structures_collection = db['dummy_structures']
 
 # Functions
 def update_workflow_status(new_status, workflow_id):
