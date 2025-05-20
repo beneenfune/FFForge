@@ -89,6 +89,12 @@ export default function WorkflowItem({ workflow }) {
         </Typography>
       </AccordionSummary>
       <AccordionDetails>
+        {/*MLFF Accuracy Plot*/}
+        <img
+          src={"/images/mlff_plot_placeholder.png" || "/images/milf_plot_placeholder.png"}
+          alt="accuracy_plot"
+          style={{ width: 200, height: 200}}
+        />
         <Typography>
           <strong>Purpose:</strong> {workflow.purpose}
         </Typography>
@@ -107,6 +113,7 @@ export default function WorkflowItem({ workflow }) {
             hour12: true,
           }).format(new Date(workflow.created_at))}
         </Typography>
+        
 
         {/* Progress Stepper */}
         <Typography sx={{ marginBottom: "10px" }}>
