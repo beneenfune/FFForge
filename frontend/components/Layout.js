@@ -90,7 +90,7 @@ export default function Layout({ children }) {
             noWrap
             component="div"
           >
-            FFForge
+            FFForge - Generate forcefields for polymer structures
           </Typography>
         </Toolbar>
       </AppBar>
@@ -118,7 +118,7 @@ export default function Layout({ children }) {
         <List>
           {[
             {
-              text: "My Workflows",
+              text: "My What the woflows",
               path: "/my-workflows",
               icon: <WorkflowsIcon />,
             },
