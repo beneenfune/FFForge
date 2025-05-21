@@ -90,7 +90,7 @@ export default function Layout({ children }) {
             noWrap
             component="div"
           >
-            FFForge
+            FFForge - Generate forcefields for polymer structures
           </Typography>
         </Toolbar>
       </AppBar>
