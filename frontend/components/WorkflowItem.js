@@ -90,6 +90,9 @@ export default function WorkflowItem({ workflow }) {
       </AccordionSummary>
       <AccordionDetails>
         <Typography>
+          <img src="/images/mlff_plot_placeholder.png" alt="Icon" style={{ marginRight: '2px' }} />
+        </Typography>
+        <Typography>
           <strong>Purpose:</strong> {workflow.purpose}
         </Typography>
         <Typography>
