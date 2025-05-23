@@ -86,7 +86,7 @@ const WorkflowForm = () => {
       {/* NAME */}
       <div>
         <label className={styles.label}>
-          What is the name of your structure?
+          What is the name of your structure? 
           <span style={{ color: "red" }}>*</span>
         </label>
         <input
