@@ -11,6 +11,7 @@ const WorkflowForm = () => {
   const [primaryPurpose, setPrimaryPurpose] = useState(""); 
   const [structureType, setStructureType] = useState(""); 
   const [useActiveLearning, setUseActiveLearning] = useState("");
+  const [name, setName] = useState("");
   const [prefix, setPrefix] = useState("");
   const [maxStructures, setMaxStructures] =  useState(0);
   const [successMessage, setSuccessMessage] = useState("");
@@ -81,6 +82,21 @@ const WorkflowForm = () => {
         onChange={(e) => setStructureFile(e.target.files[0])}
         required
       />
+
+      {/* NAME */}
+      <div>
+        <label className={styles.label}>
+          What is the name of your structure? 
+          <span style={{ color: "red" }}>*</span>
+        </label>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Enter a structure name"
+          required
+        />
+      </div>
 
       {/* PREFIX */}
       <div>
