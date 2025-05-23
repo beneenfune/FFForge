@@ -9,10 +9,15 @@ const SMILESForm = () => {
     // Create string state
     const [smilesString, setSmilesString] = useState("")
     const [filePath, setFilePath] = useState('')
+    const [successMessage, setSuccessMessage] = useState("");
+    const [errorMessage, setErrorMessage] = useState("");
 
     // Use axios to handle multiple objects including files
     function handleSubmit(event) { 
         event.preventDefault();
+
+        setSuccessMessage("");
+        setErrorMessage("");
 
         const url = process.env.NEXT_PUBLIC_BASE_URL + '/api/text-input'; 
         const formData = new FormData();
@@ -35,6 +40,7 @@ const SMILESForm = () => {
 
                 // Handle success
                 if (response.status >= 200 && response.status < 300) {
+                    setSuccessMessage("Form Submitted!");
                     const file_path = response.data.filePath;
                     setFilePath(file_path);  // Set the file path in the state
                     console.log(response.data.filePath);
@@ -44,6 +50,7 @@ const SMILESForm = () => {
                 }
             })
             .catch((error) => {
+                setErrorMessage("Submission failed, please try again.")
                 console.error("Error uploading SMILES string: ", error);
             });
     }
@@ -88,6 +95,16 @@ const SMILESForm = () => {
             <div>
                 <input type="submit" value="Submit" />
             </div>
+
+            {/* Success Message */}
+            {successMessage && (
+                <p style={{ color: 'green' , textAlign: 'center'}}>{successMessage}</p>
+            )}
+
+            {/* Failed Message */}
+            {errorMessage && (
+                <p style = {{ color: 'red', textAlign: 'center'}}>{errorMessage}</p>
+            )}
 
             {/* Download button, shown only when zipPath is available */}
             {filePath && (
