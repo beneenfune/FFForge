@@ -32,7 +32,7 @@ export default function Home() {
       <div className={styles.body}>
         <div className={styles.content}>
           <h3 className={styles.heading3}>
-            Submit a What the worlow to begin generating your forefeld
+            Submit a worklow to begin generating your forcefield
           </h3>
           <p>
             <button onClick={navigateToTextInput} className={styles.link}>

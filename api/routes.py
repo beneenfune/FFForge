@@ -113,13 +113,14 @@ class TextInput(Resource):
         return {'text': 'welcome to text input page', 'test-text':'H2o'}
     
     def post(self):
-
-        # Access request data
-        smiles = request.get('smiles_string')
-        print("SMILES string processed in Flask API")
+        # TODO 
+        
+        # Access request form data
+        smiles = request.form.get('smilesString')
+        print("SMILES string processed in Flask API:"+ smiles)
 
         return {
-            'smiles_string': smiles 
+            'smilesString': smiles 
         }
     
 # Route for File Input Page

@@ -11,9 +11,7 @@ const WorkflowForm = () => {
   const [primaryPurpose, setPrimaryPurpose] = useState(""); 
   const [structureType, setStructureType] = useState(""); 
   const [useActiveLearning, setUseActiveLearning] = useState("");
-  const [name, setName] = useState("");
   const [prefix, setPrefix] = useState("");
-  const [smileStringInput, setSmileString] = useState("");
   const [maxStructures, setMaxStructures] =  useState(0);
   const [successMessage, setSuccessMessage] = useState("");
   const [atomToRemove, setAtomToRemove] = useState("");
@@ -86,21 +84,6 @@ const WorkflowForm = () => {
         required
       />
 
-      {/* NAME */}
-      <div>
-        <label className={styles.label}>
-          What is the name of your structure? 
-          <span style={{ color: "red" }}>*</span>
-        </label>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Enter a structure name"
-          required
-        />
-      </div>
-
       {/* PREFIX */}
       <div>
         <label className={styles.label}>
@@ -112,21 +95,6 @@ const WorkflowForm = () => {
           value={prefix}
           onChange={(e) => setPrefix(e.target.value)}
           placeholder="Enter a prefix"
-          required
-        />
-      </div>
-
-      {/* SMILESTRINGINPUT */}
-      <div>
-        <label className={styles.label}>
-          What SMILE string correlates with your structure?
-          <span style={{ color: "red" }}>*</span>
-        </label>
-        <input
-          type="text"
-          value={smileStringInput}
-          onChange={(e) => setSmileString(e.target.value)}
-          placeholder="Enter a SMILE STRING"
           required
         />
       </div>
