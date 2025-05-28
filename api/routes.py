@@ -535,6 +535,93 @@ class StopFetcher(Resource):
         stop_fetcher(workflow_id)
         return {"message": f"Fetcher stopped for workflow {workflow_id}."}, 200
 
+# -------------------------------------------------------------------------
+# Dummy structure endpoints
+from flask import abort
+from bson.objectid import ObjectId
+from utils.db import dummy_structures_collection
+
+# ...existing code...
+
+class StructureListAPI(Resource):
+    def post(self):
+        """Create a Structure using form-data"""
+        name = request.form.get("name")
+        smiles = request.form.get("smiles")
+        if not name or not smiles:
+            return {"error": "Both 'name' and 'smiles' fields are required."}, 400
+        structure = {
+            "name": name,
+            "smiles": smiles
+        }
+        result = dummy_structures_collection.insert_one(structure)
+        # Instead of returning the structure dict (which lacks the id), return this:
+        return {
+            "id": str(result.inserted_id),
+            "name": name,
+            "smiles": smiles
+        }, 201
+
+    def get(self):
+        """Get All Structures"""
+        structures = []
+        for doc in dummy_structures_collection.find():
+            structures.append({
+                "id": str(doc["_id"]),
+                "name": doc.get("name"),
+                "smiles": doc.get("smiles")
+            })
+        return structures, 200
+
+class StructureDetailAPI(Resource):
+    def get(self, structure_id):
+        """Get a Specific Structure"""
+        doc = dummy_structures_collection.find_one({"_id": ObjectId(structure_id)})
+        if not doc:
+            abort(404)
+        return {
+            "id": str(doc["_id"]),
+            "name": doc.get("name"),
+            "smiles": doc.get("smiles")
+        }, 200
+
+    def put(self, structure_id):
+        """Update a Structure using form-data"""
+        name = request.form.get("name")
+        smiles = request.form.get("smiles")
+        update = {}
+        if name is not None:
+            update["name"] = name
+        if smiles is not None:
+            update["smiles"] = smiles
+        if not update:
+            return {"error": "At least one of 'name' or 'smiles' must be provided."}, 400
+        result = dummy_structures_collection.find_one_and_update(
+            {"_id": ObjectId(structure_id)},
+            {"$set": update},
+            return_document=True
+        )
+        if not result:
+            abort(404)
+        # Convert ObjectId to string before returning!
+        return {
+            "id": str(result["_id"]),
+            "name": result.get("name"),
+            "smiles": result.get("smiles")
+        }, 200
+
+    def delete(self, structure_id):
+        """Delete a Structure"""
+        result = dummy_structures_collection.delete_one({"_id": ObjectId(structure_id)})
+        if result.deleted_count == 0:
+            abort(404)
+        return {"message": f"Structure {structure_id} deleted successfully."}, 200
+
+# Add dummy structure endpoints to app
+api.add_resource(StructureListAPI, '/api/dummy/structures')
+api.add_resource(StructureDetailAPI, '/api/dummy/structures/<string:structure_id>')
+
+# -------------------------------------------------------------------------
 
 # Add fetcher endpoints
 api.add_resource(StartFetcher, "/api/v1/start_fetcher")
