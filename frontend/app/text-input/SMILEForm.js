@@ -7,10 +7,11 @@ import axios from 'axios';
 
 const SMILESForm = () => {
     // Create string state
-    const [smilesString, setSmilesString] = useState("")
+    const [smileStringInput, setSmileString] = useState("");
     const [filePath, setFilePath] = useState('')
     const [successMessage, setSuccessMessage] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
+    const [name, setName] = useState("");
 
     // Use axios to handle multiple objects including files
     function handleSubmit(event) { 
@@ -21,7 +22,7 @@ const SMILESForm = () => {
 
         const url = process.env.NEXT_PUBLIC_BASE_URL + '/api/text-input'; 
         const formData = new FormData();
-        formData.append('smilesString', smilesString);
+        formData.append("smilesString", smileStringInput);
 
         // Log the formData entries
         for (let pair of formData.entries()) {
@@ -82,14 +83,36 @@ const SMILESForm = () => {
 
     return (
         <form className={styles.create} onSubmit={handleSubmit}>
-            {/* Input field for SMILES string */}
-            <input 
-                type="text" 
-                placeholder="Enter SMILES string"
-                onChange={(e) => setSmilesString(e.target.value)}
-                value={smilesString}
-                required 
+            
+            {/* NAME */}
+            <div>
+            <label className={styles.label}>
+                What is the name of your structure? 
+                <span style={{ color: "red" }}>*</span>
+            </label>
+            <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter a structure name"
+                required
             />
+            </div>
+
+            {/* SMILESTRINGINPUT */}
+            <div>
+            <label className={styles.label}>
+                What SMILE string correlates with your structure?
+                <span style={{ color: "red" }}>*</span>
+            </label>
+            <input
+                type="text"
+                value={smileStringInput}
+                onChange={(e) => setSmileString(e.target.value)}
+                placeholder="Enter a SMILE STRING"
+                required
+            />
+            </div>
 
             {/* Submit button */}
             <div>

@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigation } from '../../utils/navigation';
 import styles from '../../styles/Landing.module.css'; 
-import MainComponent from '../../components/MainComponent'; 
 import SMILESForm from './SMILEForm';
 import Layout from "../../components/Layout"; 
 
