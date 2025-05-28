@@ -13,11 +13,13 @@ const WorkflowForm = () => {
   const [useActiveLearning, setUseActiveLearning] = useState("");
   const [name, setName] = useState("");
   const [prefix, setPrefix] = useState("");
+  const [smileStringInput, setSmileString] = useState("");
   const [maxStructures, setMaxStructures] =  useState(0);
   const [successMessage, setSuccessMessage] = useState("");
   const [atomToRemove, setAtomToRemove] = useState("");
   const [electrolyteAtoms, setElectrolyteAtoms] = useState("");
   const [adsorbateMolecules, setAdsorbateMolecules] = useState("");
+  
 
   // Use axios to handle multiple objects including files
   function handleSubmit(event) {
@@ -28,6 +30,7 @@ const WorkflowForm = () => {
     formData.append("use_active_learning", useActiveLearning);
     formData.append("max_structures", maxStructures);
     formData.append("prefix", prefix);
+    formData.append("smileString", smileStringInput);
 
     // Conditionally append fields based on primaryPurpose
     if (primaryPurpose === "DMA") {
@@ -109,6 +112,21 @@ const WorkflowForm = () => {
           value={prefix}
           onChange={(e) => setPrefix(e.target.value)}
           placeholder="Enter a prefix"
+          required
+        />
+      </div>
+
+      {/* SMILESTRINGINPUT */}
+      <div>
+        <label className={styles.label}>
+          What SMILE string correlates with your structure?
+          <span style={{ color: "red" }}>*</span>
+        </label>
+        <input
+          type="text"
+          value={smileStringInput}
+          onChange={(e) => setSmileString(e.target.value)}
+          placeholder="Enter a SMILE STRING"
           required
         />
       </div>
