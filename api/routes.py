@@ -426,7 +426,7 @@ class WorkflowSubmission(Resource):
             
             # Update mongoDB wf entry
             new_status = "generating runs"
-            update_workflow_status(new_status, str(workflow_id))
+            # update_workflow_status(new_status, str(workflow_id))
 
             return {
                 "message": "Workflow submitted and files uploaded successfully!",

@@ -28,7 +28,6 @@ const WorkflowForm = () => {
     formData.append("use_active_learning", useActiveLearning);
     formData.append("max_structures", maxStructures);
     formData.append("prefix", prefix);
-    formData.append("smileString", smileStringInput);
 
     // Conditionally append fields based on primaryPurpose
     if (primaryPurpose === "DMA") {
