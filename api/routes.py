@@ -124,7 +124,10 @@ class TextInput(Resource):
             }
             
             #create wf on mongodb i think?
-            workflow_entry = create_workflow_entry(data)
+            workflow_entry = {
+                "smilesString" : data["smilesString"],
+                "name": data["name"]
+            }
             workflow_id = workflows_collection.insert_one(workflow_entry).inserted_id
             
             #get info for naming later
