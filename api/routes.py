@@ -114,6 +114,76 @@ class TextInput(Resource):
     
     def post(self):
         # TODO 
+        json_file_path = None
+        
+        try:
+            # create new dictionary using the form data
+            data = {
+                "smilesString": request.form.get('smilesString'),
+                "name": request.form.get('name')
+            }
+            
+            #create wf on mongodb i think?
+            workflow_entry = create_workflow_entry(data)
+            workflow_id = workflows_collection.insert_one(workflow_entry).inserted_id
+            
+            #get info for naming later
+            workflow_dir_name = str(workflow_id)
+            name = data['name']
+
+            # Create a directory in Perlmutter 
+            root_dir = os.getenv("ROOT_DIR")
+            if not root_dir:
+                raise EnvironmentError("ROOT_DIR environment variable not set.")
+            
+            #create new directory for each wf
+            new_directory = create_directory_on_login_node("perlmutter", root_dir + "/smiles_submissions", workflow_dir_name)            
+            if not new_directory:
+                return {'error': "Failed to create directory on Perlmutter."}, 500
+            
+            # Create JSON file containing workflow specifications
+            json_filename = f"{name}_{workflow_id}.json" #new name
+            json_file_path = os.path.join('static', json_filename)
+            
+            wf_specification = {
+                "workflow_id": str(workflow_id),
+                "smilesString": data["smilesString"],
+                "name": data["name"]
+            }            
+            
+            # Write JSON data to file
+            with open(json_file_path, 'w') as json_file:
+                json.dump(wf_specification, json_file, indent=4)
+            
+            #upload 
+            try:
+                asyncio.run(upload_file(json_file_path, new_directory)) # Upload workflow specification file
+
+            except Exception as e:
+                return {'error': f"Failed to upload files to Perlmutter: {str(e)}"}, 500
+            
+            # Update mongoDB wf entry
+            new_status = "generating runs"
+            # update_workflow_status(new_status, str(workflow_id))
+
+            return {
+                "message": "Workflow submitted and files uploaded successfully!",
+                "workflow_id": str(workflow_id),
+            }, 201  # HTTP 201 Created
+
+        except Exception as e:
+            return {"error": str(e)}, 400  # HTTP 400 Bad Request
+
+        
+        finally:
+            # Remove local files if they exist
+            if json_file_path and os.path.exists(json_file_path):
+                os.remove(json_file_path)
+            
+            # Start a fetcher for this workflow
+            # run_fetcher(workflow_id)
+            
+            ### leftover. idk what it does
         
         # Access request form data
         smiles = request.form.get('smilesString')

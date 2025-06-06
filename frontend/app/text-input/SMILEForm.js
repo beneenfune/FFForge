@@ -12,17 +12,23 @@ const SMILESForm = () => {
     const [successMessage, setSuccessMessage] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
     const [name, setName] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Use axios to handle multiple objects including files
     function handleSubmit(event) { 
         event.preventDefault();
 
+        //disables button if submitting (prevent 2x submissions)
+        if (isSubmitting) return;
+
+        setIsSubmitting(true);
         setSuccessMessage("");
         setErrorMessage("");
 
         const url = process.env.NEXT_PUBLIC_BASE_URL + '/api/text-input'; 
         const formData = new FormData();
         formData.append("smilesString", smileStringInput);
+        formData.append("name", name);
 
         // Log the formData entries
         for (let pair of formData.entries()) {
@@ -42,9 +48,16 @@ const SMILESForm = () => {
                 // Handle success
                 if (response.status >= 200 && response.status < 300) {
                     setSuccessMessage("Form Submitted!");
+                    setTimeout(() => {
+                        setSuccessMessage("");
+                    }, 3000); 
                     const file_path = response.data.filePath;
                     setFilePath(file_path);  // Set the file path in the state
                     console.log(response.data.filePath);
+
+                    // clear the entry boxes
+                    setSmileString("");
+                    setName("");
                 } else {
                     // Handle error if status code is not in the range of 2xx
                     throw new Error(`HTTP error: ${response.status}`);
@@ -53,6 +66,10 @@ const SMILESForm = () => {
             .catch((error) => {
                 setErrorMessage("Submission failed, please try again.")
                 console.error("Error uploading SMILES string: ", error);
+            })
+            // re-enable button
+            .finally(() => {
+                setIsSubmitting(false); 
             });
     }
 
@@ -116,7 +133,11 @@ const SMILESForm = () => {
 
             {/* Submit button */}
             <div>
-                <input type="submit" value="Submit" />
+                <input
+                    type="submit"
+                    value={isSubmitting ? "Submitting..." : "Submit"}
+                    disabled={isSubmitting}
+                />
             </div>
 
             {/* Success Message */}
