@@ -25,12 +25,17 @@ export const useNavigation = () => {
         router.push('/visualize');
     };
 
+    const navigateToDMAx = () => {
+        router.push('/dmax-input')
+    };
+
 
     return {
         navigateToTextInput,
         navigateToFileInput,
         navigateToKetcher,
         navigateToLanding,
-        navigateToVisualize
+        navigateToVisualize,
+        navigateToDMAx
     };
 };
