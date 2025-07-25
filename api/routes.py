@@ -220,8 +220,6 @@ class DMAxInput(Resource):
             print("Received number of molecules: " + number_molecules)
             print("Received density: " + density)
             
-            ## TODO: make a submission wf in the sfapi.py and then run it here 
-            ## in a try catch?
 
             return {
                 "message": "Workflow submitted and files uploaded successfully!",
