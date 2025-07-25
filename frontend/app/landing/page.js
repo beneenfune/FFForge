@@ -8,7 +8,7 @@ import Layout from "../../components/Layout";
 export default function Home() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
-  const { navigateToTextInput, navigateToFileInput, navigateToKetcher } =
+  const { navigateToTextInput, navigateToFileInput, navigateToKetcher, navigateToDMAx } =
     useNavigation();
 
   useEffect(() => {
@@ -47,6 +47,11 @@ export default function Home() {
           <p>
             <button onClick={navigateToKetcher} className={styles.link}>
               Design a structure with GUI
+            </button>
+          </p>
+          <p>
+            <button onClick={navigateToDMAx} className={styles.link}>
+              Input a DMAx Workflow
             </button>
           </p>
         </div>
